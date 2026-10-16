@@ -219,7 +219,18 @@
         <div id="map-controls" class="flex-1 min-h-0 overflow-y-auto p-3.5 space-y-4">
 
             <section class="bg-slate-800/90 p-3 rounded-lg border border-slate-700 text-xs">
-                <h2 class="font-semibold text-slate-300 uppercase tracking-wider mb-2">Sincronizzazione cloud</h2>
+                <details id="cloud-sync-details" open>
+                    <summary class="flex items-center justify-between gap-3 cursor-pointer select-none font-semibold text-slate-300 uppercase tracking-wider hover:text-white">
+                        <span class="flex min-w-0 items-center gap-2">
+                            <span class="truncate">Sincronizzazione cloud</span>
+                            <span id="cloud-connection-status" role="status" aria-live="polite" class="inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-bold normal-case tracking-normal text-rose-300 bg-rose-950/70 border-rose-900">
+                                <span class="h-1.5 w-1.5 rounded-full bg-rose-400" aria-hidden="true"></span>
+                                Offline
+                            </span>
+                        </span>
+                        <svg class="saved-maps-chevron w-4 h-4 shrink-0 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.09 1.032l-4.255 4.515a.75.75 0 0 1-1.09 0L5.21 8.263a.75.75 0 0 1 .02-1.052Z" clip-rule="evenodd"/></svg>
+                    </summary>
+                    <div class="pt-2">
                 <p id="cloud-status" class="text-slate-400 mb-2">Controllo configurazione cloud…</p>
                 <div id="cloud-auth-form" class="space-y-2 hidden">
                     <input type="email" id="cloud-email" autocomplete="username" placeholder="La tua email" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
@@ -239,6 +250,8 @@
                         <label class="bg-slate-700 hover:bg-slate-600 text-slate-200 py-1.5 rounded text-center cursor-pointer">Importa backup<input id="cloud-import-data" type="file" accept="application/json,.json" class="hidden"></label>
                     </div>
                 </div>
+                    </div>
+                </details>
             </section>
             
             <!-- Impostazioni Mappa -->
@@ -651,6 +664,12 @@
             status.className = `mb-2 ${error ? 'text-rose-300' : 'text-slate-400'}`;
         }
 
+        function setCloudConnectionStatus(online) {
+            const status = document.getElementById('cloud-connection-status');
+            status.className = `inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-bold normal-case tracking-normal ${online ? 'text-emerald-300 bg-emerald-950/70 border-emerald-900' : 'text-rose-300 bg-rose-950/70 border-rose-900'}`;
+            status.innerHTML = `<span class="h-1.5 w-1.5 rounded-full ${online ? 'bg-emerald-400' : 'bg-rose-400'}" aria-hidden="true"></span>${online ? 'Online' : 'Offline'}`;
+        }
+
         function renderCloudAccount(user = null) {
             document.getElementById('cloud-auth-form').classList.toggle('hidden', !cloudEnabled || Boolean(user));
             document.getElementById('cloud-account-controls').classList.toggle('hidden', !user);
@@ -739,6 +758,7 @@
                     setCloudStatus('Aggiornamento ricevuto da un altro dispositivo.');
                 })
                 .subscribe();
+            setCloudConnectionStatus(true);
         }
 
         async function saveStateToCloud() {
@@ -765,6 +785,7 @@
             if (!user) {
                 cloudUser = null;
                 lastCloudStateJson = null;
+                setCloudConnectionStatus(false);
                 if (cloudChannel && cloudClient) await cloudClient.removeChannel(cloudChannel);
                 cloudChannel = null;
                 renderCloudAccount();
@@ -775,6 +796,7 @@
                 await connectCloudUser(user);
             } catch (error) {
                 console.error('Errore caricamento dati cloud:', error);
+                setCloudConnectionStatus(false);
                 setCloudStatus('Impossibile caricare i dati cloud. Controlla la configurazione e riprova.', true);
             }
         }
@@ -782,10 +804,12 @@
         function initializeCloudSync() {
             if (!cloudEnabled) {
                 renderCloudAccount();
+                setCloudConnectionStatus(false);
                 setCloudStatus('Configura Supabase seguendo LEGGIMI.txt per attivare la sincronizzazione.');
                 return;
             }
             renderCloudAccount();
+            setCloudConnectionStatus(false);
             setCloudStatus('Accedi per sincronizzare i dati tra i tuoi dispositivi.');
             cloudClient.auth.onAuthStateChange((_event, session) => {
                 window.setTimeout(() => handleCloudSession(session), 0);
