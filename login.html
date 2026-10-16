@@ -15,7 +15,14 @@
             min-height: 100dvh;
             font-family: Inter, sans-serif;
             color: #e2e8f0;
-            background: radial-gradient(ellipse at 50% -15%, rgba(79, 70, 229, .25), transparent 55%), #020617;
+            background-color: #020617;
+            background-image:
+                linear-gradient(180deg, rgba(2, 6, 23, .58), rgba(2, 6, 23, .78)),
+                radial-gradient(ellipse at 50% -15%, rgba(79, 70, 229, .22), transparent 58%),
+                url("https://media.istockphoto.com/id/1498453935/it/vettoriale/modello-marrone-senza-cuciture-di-dadi-d4-d6-d8-d10-d12-e-d20-per-giochi-da-tavolo.jpg?s=612x612&w=0&k=20&c=biA7bkrpklUH7ETql4KK5WFTy0ZltisCflrrnBlbQfc=");
+            background-position: center, center, top left;
+            background-size: cover, cover, 420px 420px;
+            background-repeat: no-repeat, no-repeat, repeat;
         }
         input { font-size: 16px; }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
@@ -24,8 +31,8 @@
 <body class="flex min-h-screen min-h-[100dvh] items-center justify-center p-4">
     <main class="w-full max-w-md">
         <div class="mb-6 text-center">
-            <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-400/25 bg-indigo-500/15 text-indigo-300 shadow-lg shadow-indigo-950/40">
-                <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 20 3.8 17.4A1.5 1.5 0 0 1 3 16.1V5.8a1.5 1.5 0 0 1 2.2-1.3L9 6.5m0 13.5 6-3m-6 3V6.5m6 13.5 5.2 2.6a1.5 1.5 0 0 0 2.2-1.3V10.9a1.5 1.5 0 0 0-.8-1.3L15 7m0 13V7m0 0L9 6.5"/></svg>
+            <div class="mx-auto mb-4 flex h-[88px] w-[63px] items-center justify-center overflow-hidden rounded-xl border border-indigo-400/30 bg-slate-950/70 shadow-lg shadow-indigo-950/40">
+                <img src="https://cdn.displate.com/artwork/270x380/2022-06-06/1b7913a1c9313b8a83301cd28795ddc6_d34d4d6b8161c0a2bf9a1eaf3a697f74.jpg" alt="Illustrazione di un dado a venti facce" class="h-full w-full object-contain">
             </div>
             <p class="mb-2 text-xs font-semibold uppercase tracking-[.22em] text-indigo-300">Mappa Tattica</p>
             <h1 class="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">Accedi al tuo cloud</h1>
