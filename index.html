@@ -21,6 +21,8 @@
             user-select: none;
         }
 
+        body.auth-checking { visibility: hidden; }
+
         /* Use the visible mobile viewport when browser chrome expands or collapses. */
         @supports (height: 100dvh) {
             body.h-screen { height: 100dvh; }
@@ -200,7 +202,7 @@
         }
     </style>
 </head>
-<body class="flex h-screen w-screen bg-slate-950 font-sans">
+<body class="auth-checking flex h-screen w-screen bg-slate-950 font-sans">
 
     <!-- Barra Laterale -->
     <aside id="map-sidebar" class="w-80 bg-slate-900 border-r border-slate-700 flex flex-col shadow-2xl z-20 shrink-0">
@@ -232,6 +234,9 @@
                     </summary>
                     <div class="pt-2">
                 <p id="cloud-status" class="text-slate-400 mb-2">Controllo configurazione cloud…</p>
+                <button id="demo-return-login" type="button" class="hidden w-full rounded-lg border border-indigo-500/40 bg-indigo-950/50 px-3 py-2.5 text-left font-semibold text-indigo-200 transition hover:border-indigo-400/70 hover:bg-indigo-900/60">
+                    ← Torna al login
+                </button>
                 <div id="cloud-auth-form" class="space-y-2 hidden">
                     <input type="email" id="cloud-email" autocomplete="username" placeholder="La tua email" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
                     <input type="password" id="cloud-password" autocomplete="current-password" placeholder="Password (almeno 8 caratteri)" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
@@ -513,10 +518,11 @@
             editing: null // { type: 'palette'|'board', id: string }
         };
         const STORAGE_KEY = 'dnd-tactical-map-tokens-v1';
+        const LOGIN_GATE_KEY = 'dnd-cloud-login-approved';
         const cloudConfig = window.MAP_CLOUD_CONFIG || {};
         const cloudEnabled = Boolean(cloudConfig.url && cloudConfig.anonKey && !cloudConfig.url.includes('INSERISCI') && !cloudConfig.anonKey.includes('INSERISCI') && window.supabase?.createClient);
         const cloudClient = cloudEnabled ? window.supabase.createClient(cloudConfig.url, cloudConfig.anonKey, {
-            auth: { persistSession: false, detectSessionInUrl: false }
+            auth: { persistSession: true, detectSessionInUrl: false }
         }) : null;
         let cloudUser = null;
         let cloudChannel = null;
@@ -548,7 +554,36 @@
             return /^https?:\/\//i.test(value) || value.startsWith('data:image');
         }
 
-        function init() {
+        async function authorizeMapEntry() {
+            const approvedEntry = sessionStorage.getItem(LOGIN_GATE_KEY);
+
+            if (approvedEntry === 'demo') {
+                if (cloudClient) await cloudClient.auth.signOut({ scope: 'local' }).catch(() => {});
+                return 'demo';
+            }
+
+            if (approvedEntry !== 'account' || !cloudEnabled) {
+                if (cloudClient) await cloudClient.auth.signOut({ scope: 'local' }).catch(() => {});
+                window.location.replace('./login.html');
+                return false;
+            }
+
+            try {
+                const { data, error } = await cloudClient.auth.getSession();
+                if (error || !data.session) throw error || new Error('Sessione non valida');
+                return 'account';
+            } catch (error) {
+                sessionStorage.removeItem(LOGIN_GATE_KEY);
+                await cloudClient.auth.signOut({ scope: 'local' }).catch(() => {});
+                window.location.replace('./login.html');
+                return false;
+            }
+        }
+
+        async function init() {
+            const entryMode = await authorizeMapEntry();
+            if (!entryMode) return;
+            document.body.classList.remove('auth-checking');
             renderPalette();
             renderBoardTokens();
             renderSavedMaps();
@@ -557,7 +592,7 @@
             setMobileControlsCollapsed(window.matchMedia('(max-width: 768px)').matches);
             centerMap();
             if (state.map.autoFitImage && isImageUrl(state.map.bg)) fitMapToImage(state.map.bg);
-            initializeCloudSync();
+            initializeCloudSync(entryMode === 'demo');
         }
 
         function setMobileControlsCollapsed(collapsed) {
@@ -802,7 +837,21 @@
             }
         }
 
-        function initializeCloudSync() {
+        function initializeCloudSync(demoMode = false) {
+            if (demoMode) {
+                renderCloudAccount();
+                document.getElementById('cloud-auth-form').classList.add('hidden');
+                const returnToLoginButton = document.getElementById('demo-return-login');
+                returnToLoginButton.classList.remove('hidden');
+                returnToLoginButton.addEventListener('click', async () => {
+                    if (cloudClient) await cloudClient.auth.signOut({ scope: 'local' }).catch(() => {});
+                    sessionStorage.removeItem(LOGIN_GATE_KEY);
+                    window.location.replace('./login.html');
+                });
+                setCloudConnectionStatus(false);
+                setCloudStatus('Modalità demo: sincronizzazione cloud disattivata.');
+                return;
+            }
             if (!cloudEnabled) {
                 renderCloudAccount();
                 setCloudConnectionStatus(false);
@@ -843,8 +892,12 @@
             });
 
             document.getElementById('cloud-sign-out').addEventListener('click', async () => {
-                const { error } = await cloudClient.auth.signOut();
+                const { error } = await cloudClient.auth.signOut({ scope: 'local' });
                 if (error) setCloudStatus(error.message, true);
+                else {
+                    sessionStorage.removeItem(LOGIN_GATE_KEY);
+                    window.location.replace('./login.html');
+                }
             });
 
             document.getElementById('cloud-export-data').addEventListener('click', exportMapBackup);
