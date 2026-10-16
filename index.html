@@ -21,6 +21,11 @@
             user-select: none;
         }
 
+        /* Use the visible mobile viewport when browser chrome expands or collapses. */
+        @supports (height: 100dvh) {
+            body.h-screen { height: 100dvh; }
+        }
+
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
@@ -67,6 +72,16 @@
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
         details[open] .saved-maps-chevron { transform: rotate(180deg); }
+
+        #map-sidebar-header {
+            min-height: 64px;
+            padding-top: max(0.75rem, env(safe-area-inset-top));
+        }
+
+        #map-controls { overscroll-behavior: contain; }
+        #btn-toggle-edit #menu-open-icon,
+        #btn-toggle-edit[aria-expanded="true"] #menu-closed-icon { display: none; }
+        #btn-toggle-edit[aria-expanded="true"] #menu-open-icon { display: block; }
         
         #map-wrapper.panning {
             cursor: grabbing;
@@ -83,28 +98,100 @@
         @media (max-width: 768px) {
             body { flex-direction: column; }
             aside {
-                width: 100% !important;
-                height: 42vh;
-                min-height: 165px;
-                max-height: 42vh;
-                flex: 0 0 auto;
-                border-right: 0;
-                border-bottom: 1px solid #334155;
+                position: fixed;
+                inset: 0;
+                width: 100vw !important;
+                height: 100vh;
+                min-height: 0;
+                max-height: none;
+                flex: none;
+                border: 0;
+                border-radius: 0;
+                background: linear-gradient(165deg, #111c31 0%, #0f172a 100%);
+                box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
+                transform: translateX(0);
+                transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
             }
             #map-viewport { flex: 1 1 auto; min-height: 0; width: 100%; }
+            #map-sidebar-header {
+                min-height: 68px;
+                padding-left: max(1rem, env(safe-area-inset-left));
+                padding-right: max(1rem, env(safe-area-inset-right));
+                background: rgba(2, 6, 23, 0.92);
+                backdrop-filter: blur(14px);
+            }
+            #map-sidebar-header h1 { font-size: 0.95rem; }
+            #btn-toggle-edit {
+                min-height: 42px;
+                padding: 0 0.9rem;
+                border: 1px solid rgba(129, 140, 248, 0.4);
+                border-radius: 999px;
+                background: linear-gradient(135deg, #4f46e5, #4338ca);
+                color: #fff;
+                box-shadow: 0 5px 16px rgba(79, 70, 229, 0.28);
+                font-size: 0.8rem;
+                font-weight: 600;
+                transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+            }
+            #btn-toggle-edit:active { transform: scale(0.97); }
+            #map-controls {
+                padding: 0.85rem max(0.85rem, env(safe-area-inset-right)) calc(1rem + env(safe-area-inset-bottom)) max(0.85rem, env(safe-area-inset-left));
+                scrollbar-width: thin;
+            }
+            aside.sidebar-collapsed {
+                height: 100vh;
+                min-height: 0;
+                max-height: none;
+                transform: translateX(-102%);
+                pointer-events: none;
+            }
+            #map-controls > section { border-color: rgba(71, 85, 105, 0.72); }
             aside button, aside input:not([type="checkbox"]):not([type="range"]):not([type="color"]), aside select {
-                min-height: 38px;
+                min-height: 44px;
+            }
+            aside input:not([type="checkbox"]):not([type="range"]):not([type="color"]), aside select {
+                font-size: 16px;
             }
             #token-palette { max-height: 120px; }
             #btn-zoom-in, #btn-zoom-out { min-width: 44px; min-height: 44px; }
             .mobile-edit-toggle { display: inline-flex; }
-            aside.sidebar-collapsed {
-                height: auto;
-                min-height: 0;
-                max-height: none;
-                flex: 0 0 auto;
-            }
             aside.sidebar-collapsed #map-controls { display: none; }
+            #btn-open-menu {
+                position: absolute;
+                z-index: 30;
+                top: max(0.85rem, env(safe-area-inset-top));
+                left: max(0.85rem, env(safe-area-inset-left));
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.55rem;
+                min-height: 46px;
+                padding: 0 1rem;
+                border: 1px solid rgba(129, 140, 248, 0.42);
+                border-radius: 999px;
+                background: rgba(49, 46, 129, 0.94);
+                color: #fff;
+                box-shadow: 0 8px 24px rgba(2, 6, 23, 0.52);
+                backdrop-filter: blur(12px);
+                font-size: 0.85rem;
+                font-weight: 600;
+                transition: opacity 160ms ease, transform 160ms ease;
+            }
+            body.mobile-menu-open #btn-open-menu {
+                opacity: 0;
+                pointer-events: none;
+                transform: translateY(-5px);
+            }
+        }
+
+        @supports (height: 100dvh) {
+            @media (max-width: 768px) {
+                aside, aside.sidebar-collapsed { height: 100dvh; }
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #btn-toggle-edit, #btn-open-menu, #map-sidebar { transition: none; }
         }
 
         .mobile-edit-toggle { display: none; }
@@ -117,18 +204,19 @@
 
     <!-- Barra Laterale -->
     <aside id="map-sidebar" class="w-80 bg-slate-900 border-r border-slate-700 flex flex-col shadow-2xl z-20 shrink-0">
-        <div class="p-3.5 border-b border-slate-700 bg-slate-950 flex items-center justify-between">
+        <div id="map-sidebar-header" class="p-3.5 border-b border-slate-700 bg-slate-950 flex items-center justify-between gap-2">
             <h1 class="text-base font-bold text-white flex items-center gap-2">
                 <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
                 Mappa Tattica D&D
             </h1>
-            <button id="btn-toggle-edit" class="mobile-edit-toggle items-center gap-1.5 text-xs text-slate-300 hover:text-white bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5" aria-expanded="false" aria-controls="map-controls">
-                <span id="edit-toggle-label">Modifica</span>
-                <svg id="edit-toggle-chevron" class="w-3.5 h-3.5 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.09 1.032l-4.255 4.515a.75.75 0 0 1-1.09 0L5.21 8.263a.75.75 0 0 1 .02-1.052Z" clip-rule="evenodd"/></svg>
+            <button id="btn-toggle-edit" class="mobile-edit-toggle items-center justify-center gap-2 text-xs" aria-expanded="false" aria-controls="map-controls" aria-label="Apri il menu di modifica">
+                <svg id="menu-closed-icon" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+                <svg id="menu-open-icon" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+                <span id="edit-toggle-label">Menu</span>
             </button>
         </div>
 
-        <div id="map-controls" class="flex-1 overflow-y-auto p-3.5 space-y-4">
+        <div id="map-controls" class="flex-1 min-h-0 overflow-y-auto p-3.5 space-y-4">
 
             <section class="bg-slate-800/90 p-3 rounded-lg border border-slate-700 text-xs">
                 <h2 class="font-semibold text-slate-300 uppercase tracking-wider mb-2">Sincronizzazione cloud</h2>
@@ -326,6 +414,10 @@
 
     <!-- Area Mappa -->
     <main class="flex-1 relative bg-slate-950 overflow-hidden" id="map-viewport">
+        <button id="btn-open-menu" type="button" aria-label="Apri il menu di modifica" aria-controls="map-controls" class="hidden">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            <span>Menu</span>
+        </button>
         <div id="map-wrapper" class="absolute origin-top-left flex items-center justify-center min-w-full min-h-full">
             <div id="map-container" class="grid-pattern relative border border-slate-700"></div>
         </div>
@@ -431,7 +523,7 @@
         const mapSidebar = document.getElementById('map-sidebar');
         const editToggleButton = document.getElementById('btn-toggle-edit');
         const editToggleLabel = document.getElementById('edit-toggle-label');
-        const editToggleChevron = document.getElementById('edit-toggle-chevron');
+        const openMenuButton = document.getElementById('btn-open-menu');
 
         function cellSize() { return state.map.cellSize; }
         function mapWidth() { return state.map.widthPx || state.map.cols * cellSize(); }
@@ -456,15 +548,28 @@
 
         function setMobileControlsCollapsed(collapsed) {
             mapSidebar.classList.toggle('sidebar-collapsed', collapsed);
+            document.body.classList.toggle('mobile-menu-open', !collapsed);
             editToggleButton.setAttribute('aria-expanded', String(!collapsed));
-            editToggleLabel.textContent = collapsed ? 'Modifica' : 'Mappa';
+            editToggleLabel.textContent = collapsed ? 'Menu' : 'Chiudi';
+            editToggleButton.setAttribute('aria-label', collapsed ? 'Apri il menu di modifica' : 'Chiudi il menu di modifica');
             editToggleButton.title = collapsed ? 'Mostra i controlli di modifica' : 'Nascondi i controlli di modifica';
-            editToggleChevron.style.transform = collapsed ? 'rotate(180deg)' : 'rotate(0deg)';
         }
 
         editToggleButton.addEventListener('click', () => {
             setMobileControlsCollapsed(!mapSidebar.classList.contains('sidebar-collapsed'));
             requestAnimationFrame(centerMap);
+        });
+
+        openMenuButton.addEventListener('click', () => {
+            setMobileControlsCollapsed(false);
+            requestAnimationFrame(centerMap);
+        });
+
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && window.matchMedia('(max-width: 768px)').matches && !mapSidebar.classList.contains('sidebar-collapsed')) {
+                setMobileControlsCollapsed(true);
+                requestAnimationFrame(centerMap);
+            }
         });
 
         function loadSavedTokens() {
