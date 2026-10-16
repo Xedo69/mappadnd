@@ -400,7 +400,7 @@
     <script src="./supabase-config.js?v=mapfit1"></script>
     <script>
         const state = {
-            map: { cols: 20, rows: 15, bg: '#334155', showGrid: true, cellSize: 40, snapToGrid: true, autoFitImage: true },
+            map: { cols: 20, rows: 15, widthPx: 800, heightPx: 600, bg: '#334155', showGrid: true, cellSize: 40, snapToGrid: true, autoFitImage: true },
             view: { scale: 1, panX: 0, panY: 0 },
             palette: [],
             boardTokens: [],
@@ -434,6 +434,8 @@
         const editToggleChevron = document.getElementById('edit-toggle-chevron');
 
         function cellSize() { return state.map.cellSize; }
+        function mapWidth() { return state.map.widthPx || state.map.cols * cellSize(); }
+        function mapHeight() { return state.map.heightPx || state.map.rows * cellSize(); }
 
         function isImageUrl(value) {
             return /^https?:\/\//i.test(value) || value.startsWith('data:image');
@@ -484,6 +486,8 @@
                     state.map.showGrid = saved.map.showGrid !== false;
                     state.map.snapToGrid = saved.map.snapToGrid !== false;
                     state.map.autoFitImage = saved.map.autoFitImage !== false;
+                    state.map.widthPx = Number(saved.map.widthPx) > 0 ? Number(saved.map.widthPx) : state.map.cols * state.map.cellSize;
+                    state.map.heightPx = Number(saved.map.heightPx) > 0 ? Number(saved.map.heightPx) : state.map.rows * state.map.cellSize;
                 }
                 document.getElementById('map-cols').value = state.map.cols;
                 document.getElementById('map-rows').value = state.map.rows;
@@ -563,6 +567,8 @@
                     state.map.showGrid = saved.map.showGrid !== false;
                     state.map.snapToGrid = saved.map.snapToGrid !== false;
                     state.map.autoFitImage = saved.map.autoFitImage !== false;
+                    state.map.widthPx = Number(saved.map.widthPx) > 0 ? Number(saved.map.widthPx) : state.map.cols * state.map.cellSize;
+                    state.map.heightPx = Number(saved.map.heightPx) > 0 ? Number(saved.map.heightPx) : state.map.rows * state.map.cellSize;
                 }
                 document.getElementById('map-cols').value = state.map.cols;
                 document.getElementById('map-rows').value = state.map.rows;
@@ -777,6 +783,8 @@
                 state.map.rows = state.map.autoFitImage
                     ? Math.max(5, Math.min(200, Math.ceil(image.naturalHeight / cellSize())))
                     : savedMap.rows;
+                state.map.widthPx = state.map.autoFitImage ? image.naturalWidth : (savedMap.widthPx || state.map.cols * cellSize());
+                state.map.heightPx = state.map.autoFitImage ? image.naturalHeight : (savedMap.heightPx || state.map.rows * cellSize());
                 document.getElementById('map-bg').value = savedMap.url;
                 document.getElementById('map-cols').value = state.map.cols;
                 document.getElementById('map-rows').value = state.map.rows;
@@ -818,6 +826,8 @@
                     url,
                     cols,
                     rows,
+                    widthPx: mapWidth(),
+                    heightPx: mapHeight(),
                     cellSize: state.map.cellSize
                 });
                 renderSavedMaps();
@@ -845,8 +855,8 @@
         // --- Gestione Mappa & Griglia ---
         function applyMapSettings() {
             const size = cellSize();
-            mapContainer.style.width = `${state.map.cols * size}px`;
-            mapContainer.style.height = `${state.map.rows * size}px`;
+            mapContainer.style.width = `${mapWidth()}px`;
+            mapContainer.style.height = `${mapHeight()}px`;
             
             const bg = state.map.bg.trim();
             const gridLines = state.map.showGrid 
@@ -885,7 +895,21 @@
         });
 
         function updateCellSize(value) {
+            const oldCellSize = cellSize();
+            const oldWidth = mapWidth();
+            const oldHeight = mapHeight();
             state.map.cellSize = Math.max(5, Math.min(100, parseInt(value, 10) || 50));
+            const positionScale = oldCellSize / state.map.cellSize;
+            state.map.widthPx = oldWidth;
+            state.map.heightPx = oldHeight;
+            state.map.cols = Math.max(5, Math.min(200, Math.round(oldWidth / state.map.cellSize)));
+            state.map.rows = Math.max(5, Math.min(200, Math.round(oldHeight / state.map.cellSize)));
+            state.boardTokens.forEach(token => {
+                token.x *= positionScale;
+                token.y *= positionScale;
+            });
+            document.getElementById('map-cols').value = state.map.cols;
+            document.getElementById('map-rows').value = state.map.rows;
             cellSizeInput.value = state.map.cellSize;
             cellSizeNumber.value = state.map.cellSize;
             applyMapSettings();
@@ -912,6 +936,8 @@
         document.getElementById('btn-update-map').addEventListener('click', () => {
             state.map.cols = Math.max(5, Math.min(200, parseInt(document.getElementById('map-cols').value) || 20));
             state.map.rows = Math.max(5, Math.min(200, parseInt(document.getElementById('map-rows').value) || 15));
+            state.map.widthPx = state.map.cols * cellSize();
+            state.map.heightPx = state.map.rows * cellSize();
             state.map.bg = document.getElementById('map-bg').value || '#334155';
             state.map.showGrid = toggleGridCheckbox.checked;
             if (state.map.autoFitImage && isImageUrl(state.map.bg)) {
@@ -942,6 +968,8 @@
                 
                 state.map.cols = Math.max(5, Math.min(200, newCols));
                 state.map.rows = Math.max(5, Math.min(200, newRows));
+                state.map.widthPx = this.naturalWidth;
+                state.map.heightPx = this.naturalHeight;
                 state.map.bg = bgUrl;
                 
                 applyMapSettings();
@@ -963,8 +991,8 @@
 
         function centerMap() {
             const vpRect = viewport.getBoundingClientRect();
-            const mapW = state.map.cols * cellSize();
-            const mapH = state.map.rows * cellSize();
+            const mapW = mapWidth();
+            const mapH = mapHeight();
             
             const scaleX = (vpRect.width - 60) / mapW;
             const scaleY = (vpRect.height - 60) / mapH;
