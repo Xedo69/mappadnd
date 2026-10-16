@@ -397,7 +397,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./supabase-config.js?v=ec8df8f"></script>
+    <script src="./supabase-config.js?v=mapfit1"></script>
     <script>
         const state = {
             map: { cols: 20, rows: 15, bg: '#334155', showGrid: true, cellSize: 40, snapToGrid: true, autoFitImage: true },
@@ -856,13 +856,14 @@
             if (bg.startsWith('http') || bg.startsWith('data:image')) {
                 if (state.map.showGrid) {
                     // CSS paints the first background layer on top: place grid lines before the image.
+                    // Stretch the image to the configured map bounds instead of cropping it with cover.
                     mapContainer.style.backgroundImage = `${gridLines}, url('${bg}')`;
-                    mapContainer.style.backgroundSize = `${size}px ${size}px, ${size}px ${size}px, cover`;
+                    mapContainer.style.backgroundSize = `${size}px ${size}px, ${size}px ${size}px, 100% 100%`;
                     mapContainer.style.backgroundRepeat = 'repeat, repeat, no-repeat';
                     mapContainer.style.backgroundPosition = 'top left, top left, center';
                 } else {
                     mapContainer.style.backgroundImage = `url('${bg}')`;
-                    mapContainer.style.backgroundSize = `cover`;
+                    mapContainer.style.backgroundSize = `100% 100%`;
                     mapContainer.style.backgroundRepeat = 'no-repeat';
                     mapContainer.style.backgroundPosition = 'center';
                 }
