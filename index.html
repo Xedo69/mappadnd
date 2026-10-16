@@ -515,7 +515,9 @@
         const STORAGE_KEY = 'dnd-tactical-map-tokens-v1';
         const cloudConfig = window.MAP_CLOUD_CONFIG || {};
         const cloudEnabled = Boolean(cloudConfig.url && cloudConfig.anonKey && !cloudConfig.url.includes('INSERISCI') && !cloudConfig.anonKey.includes('INSERISCI') && window.supabase?.createClient);
-        const cloudClient = cloudEnabled ? window.supabase.createClient(cloudConfig.url, cloudConfig.anonKey) : null;
+        const cloudClient = cloudEnabled ? window.supabase.createClient(cloudConfig.url, cloudConfig.anonKey, {
+            auth: { persistSession: false, detectSessionInUrl: false }
+        }) : null;
         let cloudUser = null;
         let cloudChannel = null;
         let cloudSaveTimer = null;
@@ -547,7 +549,6 @@
         }
 
         function init() {
-            loadSavedTokens();
             renderPalette();
             renderBoardTokens();
             renderSavedMaps();
@@ -732,15 +733,15 @@
                 applyCloudState(data.state);
                 setCloudStatus('Dati sincronizzati con il cloud.');
             } else {
-                const localState = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                const emptyState = getPersistedState();
                 const { error: insertError } = await cloudClient.from('map_states').upsert({
                     user_id: user.id,
-                    state: localState,
+                    state: emptyState,
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'user_id' });
                 if (insertError) throw insertError;
-                lastCloudStateJson = JSON.stringify(localState);
-                setCloudStatus('Dati di questo dispositivo copiati nel cloud.');
+                lastCloudStateJson = JSON.stringify(emptyState);
+                setCloudStatus('Backup cloud creato.');
             }
 
             if (cloudChannel) await cloudClient.removeChannel(cloudChannel);
@@ -789,7 +790,7 @@
                 if (cloudChannel && cloudClient) await cloudClient.removeChannel(cloudChannel);
                 cloudChannel = null;
                 renderCloudAccount();
-                if (cloudEnabled) setCloudStatus('Accedi per sincronizzare i dati tra i tuoi dispositivi.');
+                if (cloudEnabled) setCloudStatus('Accedi per caricare il backup dal cloud.');
                 return;
             }
             try {
@@ -810,7 +811,7 @@
             }
             renderCloudAccount();
             setCloudConnectionStatus(false);
-            setCloudStatus('Accedi per sincronizzare i dati tra i tuoi dispositivi.');
+            setCloudStatus('Accedi per caricare il backup dal cloud.');
             cloudClient.auth.onAuthStateChange((_event, session) => {
                 window.setTimeout(() => handleCloudSession(session), 0);
             });
