@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 13269)
-Total output lines: 740
-
 (() => {
     class TokenManager extends HTMLElement {
         constructor() {
@@ -26,30 +23,11 @@ Total output lines: 740
             }
         }
 
-        setPlayerMode(enabled) {
-            this.playerMode = Boolean(enabled);
-            this.classList.toggle('player-token-mode', this.playerMode);
-            if (this.playerMode) {
-                document.getElementById('enemy-token-section').style.display = 'none';
-                document.getElementById('token-category').value = 'avventurieri';
-                document.getElementById('token-category').disabled = true;
-                document.getElementById('edit-token-category').value = 'avventurieri';
-                document.getElementById('edit-token-category').disabled = true;
-            }
-        }
-
-        isAdventurer(token) {
-            if (token.category) return token.category !== 'nemici';
-            const template = this.context?.state.palette.find(item => item.id === token.templateId);
-            return !template || template.category !== 'nemici';
-        }
-
         createBoardToken(template, x, y) {
             const state = this.context.state;
             state.boardTokens.push({
                 id: 'tok_' + Date.now() + Math.random().toString(16).slice(2),
                 templateId: template.id,
-                category: template.category === 'nemici' ? 'nemici' : 'avventurieri',
                 name: template.name,
                 color: template.color,
                 opacity: template.opacity ?? 100,
@@ -165,12 +143,10 @@ Total output lines: 740
                 element.style.top = `${token.y * cellSize()}px`;
                 element.style.fontSize = `${Math.max(13, pixelSize * 0.3)}px`;
                 if (!token.image) element.innerText = token.name.substring(0, 2).toUpperCase();
-                element.title = this.playerMode && !this.isAdventurer(token) ? token.name : `${token.name} (${token.size}x${token.size}) - Doppio click per modificare`;
-                if (this.playerMode && !this.isAdventurer(token)) element.style.cursor = 'default';
+                element.title = `${token.name} (${token.size}x${token.size}) - Doppio click per modificare`;
                 element.addEventListener('pointerdown', event => {
-                    if (event.button !== 0 || (this.playerMode && !this.isAdventurer(token))) return;
+                    if (event.button !== 0) return;
                     event.stopPropagation();
-                    if (this.playerMode && !this.isAdventurer(token)) return;
                     this.draggedToken = token;
                     this.tokenDragMoved = false;
                     this.startClientX = event.clientX;
@@ -182,15 +158,12 @@ Total output lines: 740
                 });
                 element.addEventListener('dblclick', event => {
                     event.stopPropagation();
-                    if (this.playerMode && !this.isAdventurer(token)) return;
                     this.openEditModal('board', token.id);
                 });
-                element.addEventListener('contextmenu', async event => {
+                element.addEventListener('contextmenu', event => {
                     event.preventDefault();
                     event.stopPropagation();
-                    if (this.playerMode && !this.isAdventurer(token)) return;
-                    if (!await this.confirmDelete(`Vuoi eliminare “${token.name}” dalla mappa?`)) return;
-                    this.context.markPlayerTokenDeleted?.(token.id);
+                    if (!window.confirm(`Eliminare la pedina "${token.name}" dalla mappa?`)) return;
                     state.boardTokens = state.boardTokens.filter(entry => entry.id !== token.id);
                     this.renderBoardTokens();
                 });
@@ -219,7 +192,7 @@ Total output lines: 740
                             </summary>
                             <div id="token-palette-adventurers" class="flex max-h-48 flex-col gap-1.5 overflow-y-auto px-2 pb-2 pr-3"><p class="empty-category-msg py-2 text-center italic text-slate-500">Nessun avventuriero</p></div>
                         </details>
-                        <details id="enemy-token-section" class="rounded-md border border-slate-700 bg-slate-900/60">
+                        <details class="rounded-md border border-slate-700 bg-slate-900/60">
                             <summary class="flex cursor-pointer select-none items-center justify-between px-2.5 py-2 font-semibold text-slate-300 hover:text-white">
                                 <span>Nemici</span><span id="enemy-token-count" class="text-[10px] text-slate-500">0</span>
                             </summary>
@@ -243,7 +216,7 @@ Total output lines: 740
                             <div class="space-y-2"><label for="token-name" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300">Nome del personaggio</label><input type="text" id="token-name" placeholder="es. Paladino, Drago, Scheletro..." class="w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-white placeholder:text-slate-600 transition focus:border-emerald-400/70 focus:outline-none focus:ring-2 focus:ring-emerald-400/15"></div>
                             <div class="space-y-2"><label for="token-category" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300">Dove inserirlo</label><select id="token-category" class="w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-white transition focus:border-emerald-400/70 focus:outline-none focus:ring-2 focus:ring-emerald-400/15"><option value="avventurieri">🛡️ Avventurieri</option><option value="nemici">👹 Nemici</option></select></div>
                             <div class="grid grid-cols-[5rem_1fr] gap-3"><div class="space-y-2"><label for="token-color" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300">Colore</label><input type="color" id="token-color" value="#dc2626" class="h-12 w-full cursor-pointer rounded-xl border border-slate-700 bg-slate-950 p-1.5"></div><div class="space-y-2"><label for="token-size" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300">Dimensione sulla griglia</label><select id="token-size" class="h-12 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 text-sm text-white transition focus:border-emerald-400/70 focus:outline-none focus:ring-2 focus:ring-emerald-400/15"><option value="1">Media (1x1)</option><option value="2">Grande (2x2)</option><option value="3">Enorme (3x3)</option><option value="4">Mastodontica (4x4)</option></select></div></div>
-                            <div class="space-y-2"><label for="token-image" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300">Ritratto <span class="font-normal normal-case tracking-normal text-slate-500">facoltativo</span></label><div class="flex items-center gap-3 rounded-xl border border-dashed border-slate-700 bg-slate-950/50 p-3 transition hover:border-emerald-400/40"><input type="file" id="token-image" accept="image/*" class="min-w-0 flex-1 text-[11px] text-slate-400 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-2 file:text-xs file:font-medium file:text-slate-200 hover:file:bg-slate-700"><img id="token-image-preview" class="hidden h-12 w-12 rounded-xl border border-emerald-300/30 object-cover shadow-lg" alt="Anteprima immagine pedina"></div><div class="flex gap-2"><input id="token-image-url" type="url" placeholder="https://esempio.it/ritratto.jpg" class="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950/80 px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:border-emerald-400/70 focus:outline-none"><button id="btn-use-token-image-url" type="button" class="shrink-0 rounded-lg border border-emerald-400/30 bg-emerald-950/40 px-3 py-2 text-xs font-semibold text-emerald-200 hover:bg-emerald-900/50">Usa URL</button></div><p class="text-[10px] text-slate-500">Puoi caricare un file oppure inserire il link diretto a un’immagine.</p></div>
+                            <div class="space-y-2"><label for="token-image" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300">Ritratto <span class="font-normal normal-case tracking-normal text-slate-500">facoltativo</span></label><div class="flex items-center gap-3 rounded-xl border border-dashed border-slate-700 bg-slate-950/50 p-3 transition hover:border-emerald-400/40"><input type="file" id="token-image" accept="image/*" class="min-w-0 flex-1 text-[11px] text-slate-400 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-2 file:text-xs file:font-medium file:text-slate-200 hover:file:bg-slate-700"><img id="token-image-preview" class="hidden h-12 w-12 rounded-xl border border-emerald-300/30 object-cover shadow-lg" alt="Anteprima immagine pedina"></div><p class="text-[10px] text-slate-500">Puoi aggiungere o cambiare il ritratto anche più avanti.</p></div>
                             <button id="btn-create-token" type="button" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-950/40 transition hover:-translate-y-0.5 hover:from-emerald-400 hover:to-teal-400 focus:outline-none focus:ring-2 focus:ring-emerald-300"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Aggiungi alla palette</button>
                         </div>
                     </section>
@@ -256,69 +229,43 @@ Total output lines: 740
                             <div><label for="edit-token-category" class="mb-1 block text-slate-400">Categoria</label><select id="edit-token-category" class="w-full rounded border border-slate-600 bg-slate-900 px-2 py-1.5 text-white focus:border-indigo-500 focus:outline-none"><option value="avventurieri">Avventurieri</option><option value="nemici">Nemici</option></select></div>
                             <div class="flex gap-2"><div class="w-16"><label for="edit-token-color" class="mb-1 block text-slate-400">Colore</label><input type="color" id="edit-token-color" class="h-8 w-full cursor-pointer rounded border border-slate-600 bg-slate-900 p-0.5"></div><div class="flex-1"><label for="edit-token-size" class="mb-1 block text-slate-400">Taglia (Quadretti)</label><select id="edit-token-size" class="h-8 w-full rounded border border-slate-600 bg-slate-900 px-2 text-white focus:border-indigo-500 focus:outline-none"><option value="1">Media (1x1)</option><option value="2">Grande (2x2)</option><option value="3">Enorme (3x3)</option><option value="4">Mastodontica (4x4)</option></select></div></div>
                             <div><div class="mb-1 flex items-center justify-between"><label for="edit-token-opacity" class="text-slate-400">Opacità colore</label><span id="edit-token-opacity-value" class="text-slate-300">100%</span></div><input type="range" id="edit-token-opacity" min="0" max="100" value="100" class="w-full accent-indigo-500"></div>
-                            <div><label for="edit-token-image" class="mb-1 block text-slate-400">Immagine pedina</label><div class="flex items-center gap-2"><input type="file" id="edit-token-image" accept="image/*" class="min-w-0 flex-1 text-[10px] text-slate-300 file:mr-2 file:rounded file:border-0 file:bg-slate-700 file:px-2 file:py-1 file:text-slate-200"><img id="edit-token-image-preview" class="hidden h-9 w-9 rounded-full border border-white/50 object-cover" alt="Anteprima immagine pedina"><button id="btn-clear-edit-image" type="button" class="text-slate-400 hover:text-rose-300">Rimuovi</button></div><div class="mt-2 flex gap-2"><input id="edit-token-image-url" type="url" placeholder="https://esempio.it/ritratto.jpg" class="min-w-0 flex-1 rounded-lg border border-slate-600 bg-slate-900 px-2.5 py-2 text-xs text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none"><button id="btn-use-edit-image-url" type="button" class="shrink-0 rounded-lg border border-indigo-400/30 px-3 py-2 text-xs text-indigo-200 hover:bg-indigo-950/60">Usa URL</button></div></div>
+                            <div><label for="edit-token-image" class="mb-1 block text-slate-400">Immagine pedina</label><div class="flex items-center gap-2"><input type="file" id="edit-token-image" accept="image/*" class="min-w-0 flex-1 text-[10px] text-slate-300 file:mr-2 file:rounded file:border-0 file:bg-slate-700 file:px-2 file:py-1 file:text-slate-200"><img id="edit-token-image-preview" class="hidden h-9 w-9 rounded-full border border-white/50 object-cover" alt="Anteprima immagine pedina"><button id="btn-clear-edit-image" type="button" class="text-slate-400 hover:text-rose-300">Rimuovi</button></div></div>
                         </div>
                         <div class="flex justify-end gap-2"><button id="btn-modal-cancel" type="button" class="rounded bg-slate-700 px-3 py-1.5 font-medium text-slate-300 transition hover:bg-slate-600">Annulla</button><button id="btn-modal-save" type="button" class="rounded bg-indigo-600 px-3 py-1.5 font-medium text-white transition hover:bg-indigo-500">Salva Modifiche</button></div>
                     </div>
-                </div>
-                <div id="token-crop-modal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-slate-950/85 p-4 backdrop-blur-sm" role="presentation">
-                    <section role="dialog" aria-modal="true" aria-labelledby="token-crop-title" class="w-full max-w-lg overflow-hidden rounded-2xl border border-indigo-400/25 bg-slate-900 shadow-2xl">
-                        <header class="border-b border-white/10 px-5 py-4"><h2 id="token-crop-title" class="font-bold text-white">Ritaglia il ritratto</h2><p class="mt-1 text-xs text-slate-400">Trascina il riquadro per scegliere cosa mostrare.</p></header>
-                        <div class="space-y-4 p-5">
-                            <div id="token-crop-stage" class="relative h-[min(58vh,360px)] overflow-hidden rounded-xl border border-slate-700 bg-black/50 touch-none">
-                                <img id="token-crop-source" alt="Immagine da ritagliare" class="pointer-events-none absolute left-1/2 top-1/2 max-h-full max-w-full -translate-x-1/2 -translate-y-1/2 select-none" draggable="false">
-                                <div id="token-crop-selection" class="absolute cursor-move touch-none borde…1269 tokens truncated…ventListener('click', event => { if (event.target === createModal) closeCreate(); });
-            $('btn-use-token-image-url').addEventListener('click', () => applyImageUrl('token-image-url', createPreview, url => {
-                this.pendingTokenImage = url;
-                createImageInput.value = '';
-            }));
-            $('btn-use-edit-image-url').addEventListener('click', () => applyImageUrl('edit-token-image-url', $('edit-token-image-preview'), url => {
-                this.pendingEditImage = url;
-                this.editImageChanged = true;
-                $('edit-token-image').value = '';
-            }));
+                </div>`);
+        }
+
+        bindEvents() {
+            const $ = id => document.getElementById(id);
+            const createModal = $('token-create-modal');
+            const editModal = $('edit-modal');
+            const createButton = $('btn-open-token-create');
+            const createImageInput = $('token-image');
+            const createPreview = $('token-image-preview');
+
+            const closeCreate = () => {
+                createModal.classList.add('hidden');
+                createModal.classList.remove('flex');
+                createButton.focus();
+            };
+            createButton.addEventListener('click', () => {
+                createModal.classList.remove('hidden');
+                createModal.classList.add('flex');
+                $('token-name').focus();
+            });
+            $('btn-close-token-create').addEventListener('click', closeCreate);
+            createModal.addEventListener('click', event => { if (event.target === createModal) closeCreate(); });
             window.addEventListener('keydown', event => {
                 if (event.key === 'Escape' && !createModal.classList.contains('hidden')) closeCreate();
-                else if (event.key === 'Escape' && !cropModal.classList.contains('hidden')) this.finishCrop(null);
-                else if (event.key === 'Escape' && !confirmModal.classList.contains('hidden')) this.finishConfirm(false);
                 else if (event.key === 'Escape' && !editModal.classList.contains('hidden')) this.closeEditModal();
             });
-            $('btn-crop-cancel').addEventListener('click', () => this.finishCrop(null));
-            cropModal.addEventListener('click', event => { if (event.target === cropModal) this.finishCrop(null); });
-            $('btn-crop-save').addEventListener('click', () => {
-                try { this.finishCrop(this.createCropThumbnail()); }
-                catch (error) { this.context?.showToast(error.message || 'Impossibile creare il ritaglio.'); }
-            });
-            $('token-crop-zoom').addEventListener('input', event => {
-                if (!this.cropSelectionState) return;
-                this.cropSelectionState.sideRatio = Number(event.target.value) / 100;
-                this.renderCropSelection();
-            });
-            cropSelection.addEventListener('pointerdown', event => {
-                if (!this.cropSelectionState) return;
-                event.preventDefault();
-                cropSelection.setPointerCapture(event.pointerId);
-                this.cropDrag = { x: event.clientX, y: event.clientY, centerX: this.cropSelectionState.centerX, centerY: this.cropSelectionState.centerY };
-            });
-            cropSelection.addEventListener('pointermove', event => {
-                if (!this.cropDrag || !this.cropSelectionState) return;
-                const imageRect = cropImage.getBoundingClientRect();
-                this.cropSelectionState.centerX = this.cropDrag.centerX + (event.clientX - this.cropDrag.x) / imageRect.width;
-                this.cropSelectionState.centerY = this.cropDrag.centerY + (event.clientY - this.cropDrag.y) / imageRect.height;
-                this.renderCropSelection();
-            });
-            const finishCropDrag = () => { this.cropDrag = null; };
-            cropSelection.addEventListener('pointerup', finishCropDrag);
-            cropSelection.addEventListener('pointercancel', finishCropDrag);
 
             createImageInput.addEventListener('change', async () => {
                 const file = createImageInput.files[0];
                 if (!file) return;
                 try {
-                    const cropped = await this.makeThumbnail(file);
-                    if (!cropped) { createImageInput.value = ''; return; }
-                    this.pendingTokenImage = cropped;
-                    $('token-image-url').value = '';
+                    this.pendingTokenImage = await this.makeThumbnail(file);
                     createPreview.src = this.pendingTokenImage;
                     createPreview.classList.remove('hidden');
                 } catch (error) {
@@ -336,14 +283,13 @@ Total output lines: 740
                     name,
                     color: $('token-color').value,
                     size: parseInt($('token-size').value, 10),
-                    category: this.playerMode ? 'avventurieri' : $('token-category').value,
+                    category: $('token-category').value,
                     opacity: 100,
                     image: this.pendingTokenImage
                 });
                 $('token-name').value = '';
                 this.pendingTokenImage = null;
                 createImageInput.value = '';
-                $('token-image-url').value = '';
                 createPreview.removeAttribute('src');
                 createPreview.classList.add('hidden');
                 this.renderPalette();
@@ -363,7 +309,6 @@ Total output lines: 740
                     event.preventDefault();
                     event.stopPropagation();
                     const template = this.context?.state.palette.find(item => item.id === templateId);
-                    if (this.playerMode && category === 'nemici') return;
                     if (!template || (template.category === 'nemici' ? 'nemici' : 'avventurieri') === category) return;
                     template.category = category;
                     this.renderPalette();
@@ -376,11 +321,8 @@ Total output lines: 740
                 const file = event.target.files[0];
                 if (!file) return;
                 try {
-                    const cropped = await this.makeThumbnail(file);
-                    if (!cropped) { event.target.value = ''; return; }
-                    this.pendingEditImage = cropped;
+                    this.pendingEditImage = await this.makeThumbnail(file);
                     this.editImageChanged = true;
-                    $('edit-token-image-url').value = '';
                     this.showEditImagePreview(this.pendingEditImage);
                 } catch (error) { this.context?.showToast(error.message); }
             });
@@ -388,7 +330,6 @@ Total output lines: 740
                 this.pendingEditImage = null;
                 this.editImageChanged = true;
                 $('edit-token-image').value = '';
-                $('edit-token-image-url').value = '';
                 this.showEditImagePreview(null);
             });
             $('btn-modal-cancel').addEventListener('click', () => this.closeEditModal());
@@ -409,102 +350,12 @@ Total output lines: 740
                 img.onerror = () => reject(new Error('Impossibile aprire il file immagine.'));
                 img.src = source;
             });
-            return this.openCropDialog(image);
-        }
-
-        openCropDialog(image) {
-            return new Promise((resolve, reject) => {
-                this.cropResolver = resolve;
-                this.cropRejecter = reject;
-                this.cropSourceImage = image;
-                const modal = document.getElementById('token-crop-modal');
-                const source = document.getElementById('token-crop-source');
-                source.onload = () => {
-                    this.cropSelectionState = { centerX: 0.5, centerY: 0.5, sideRatio: 0.72 };
-                    document.getElementById('token-crop-zoom').value = '72';
-                    modal.classList.remove('hidden');
-                    modal.classList.add('flex');
-                    requestAnimationFrame(() => this.renderCropSelection());
-                };
-                source.onerror = () => {
-                    const reject = this.cropRejecter;
-                    this.finishCrop(null);
-                    reject?.(new Error('Impossibile aprire il ritratto.'));
-                };
-                source.src = image.src;
-            });
-        }
-
-        renderCropSelection() {
-            if (!this.cropSelectionState) return;
-            const stage = document.getElementById('token-crop-stage');
-            const image = document.getElementById('token-crop-source');
-            const selection = document.getElementById('token-crop-selection');
-            const stageRect = stage.getBoundingClientRect();
-            const imageRect = image.getBoundingClientRect();
-            const shortSide = Math.min(imageRect.width, imageRect.height);
-            const side = shortSide * this.cropSelectionState.sideRatio;
-            const imageLeft = imageRect.left - stageRect.left;
-            const imageTop = imageRect.top - stageRect.top;
-            const maxX = imageRect.width / 2;
-            const maxY = imageRect.height / 2;
-            this.cropSelectionState.centerX = Math.max(side / 2 / imageRect.width, Math.min(1 - side / 2 / imageRect.width, this.cropSelectionState.centerX));
-            this.cropSelectionState.centerY = Math.max(side / 2 / imageRect.height, Math.min(1 - side / 2 / imageRect.height, this.cropSelectionState.centerY));
-            const left = imageLeft + this.cropSelectionState.centerX * imageRect.width - side / 2;
-            const top = imageTop + this.cropSelectionState.centerY * imageRect.height - side / 2;
-            selection.style.width = `${side}px`;
-            selection.style.height = `${side}px`;
-            selection.style.left = `${left}px`;
-            selection.style.top = `${top}px`;
-        }
-
-        createCropThumbnail() {
-            const image = this.cropSourceImage;
-            const state = this.cropSelectionState;
-            if (!image || !state) return null;
-            const imageRect = document.getElementById('token-crop-source').getBoundingClientRect();
-            const sideDisplay = Math.min(imageRect.width, imageRect.height) * state.sideRatio;
-            const sourceSide = sideDisplay / imageRect.width * image.naturalWidth;
-            const sourceX = Math.max(0, Math.min(image.naturalWidth - sourceSide, state.centerX * image.naturalWidth - sourceSide / 2));
-            const sourceY = Math.max(0, Math.min(image.naturalHeight - sourceSide, state.centerY * image.naturalHeight - sourceSide / 2));
+            const scale = Math.min(1, 256 / Math.max(image.naturalWidth, image.naturalHeight));
             const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 256;
-            const context = canvas.getContext('2d');
-            if (!context) throw new Error('Impossibile elaborare il ritaglio.');
-            context.drawImage(image, sourceX, sourceY, sourceSide, sourceSide, 0, 0, 256, 256);
-            return canvas.toDataURL('image/webp', 0.82);
-        }
-
-        finishCrop(result) {
-            const modal = document.getElementById('token-crop-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            this.cropSelectionState = null;
-            this.cropSourceImage = null;
-            const resolve = this.cropResolver;
-            this.cropResolver = null;
-            this.cropRejecter = null;
-            if (result) resolve?.(result);
-            else resolve?.(null);
-        }
-
-        confirmDelete(message) {
-            const modal = document.getElementById('token-confirm-modal');
-            document.getElementById('token-confirm-message').textContent = message;
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.getElementById('btn-token-confirm-cancel').focus();
-            return new Promise(resolve => { this.confirmResolver = resolve; });
-        }
-
-        finishConfirm(confirmed) {
-            const modal = document.getElementById('token-confirm-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            const resolve = this.confirmResolver;
-            this.confirmResolver = null;
-            resolve?.(confirmed);
+            canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+            canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+            canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+            return canvas.toDataURL('image/webp', 0.8);
         }
 
         renderPalette() {
@@ -570,13 +421,11 @@ Total output lines: 740
                     event.stopPropagation();
                     this.openEditModal('palette', template.id);
                 });
-                item.querySelector('.btn-del-pal').addEventListener('click', async event => {
+                item.querySelector('.btn-del-pal').addEventListener('click', event => {
                     event.stopPropagation();
-                    const linked = linkedTokens();
-                    const count = linked.length;
+                    const count = linkedTokens().length;
                     const warning = count ? ` Verranno eliminate anche ${count} pedine già posizionate sulla mappa.` : '';
-                    if (!await this.confirmDelete(`Vuoi eliminare “${template.name}” dalla palette?${warning}`)) return;
-                    if (this.playerMode) linked.forEach(token => this.context.markPlayerTokenDeleted?.(token.id));
+                    if (!window.confirm(`Eliminare "${template.name}" dalla palette?${warning}`)) return;
                     state.palette = state.palette.filter(entry => entry.id !== template.id);
                     state.boardTokens = state.boardTokens.filter(token => token.templateId ? token.templateId !== template.id : token.name !== template.name || token.color !== template.color || token.size !== template.size);
                     this.renderPalette();
@@ -602,7 +451,7 @@ Total output lines: 740
             const state = this.context?.state;
             if (!state) return;
             const item = type === 'palette' ? state.palette.find(entry => entry.id === id) : state.boardTokens.find(entry => entry.id === id);
-            if (!item || (this.playerMode && (type === 'palette' ? item.category === 'nemici' : !this.isAdventurer(item)))) return;
+            if (!item) return;
             state.editing = { type, id };
             document.getElementById('edit-token-name').value = item.name;
             document.getElementById('edit-token-color').value = item.color;
@@ -613,7 +462,6 @@ Total output lines: 740
             this.pendingEditImage = item.image || null;
             this.editImageChanged = false;
             document.getElementById('edit-token-image').value = '';
-            document.getElementById('edit-token-image-url').value = /^https?:\/\//i.test(item.image || '') ? item.image : '';
             this.showEditImagePreview(this.pendingEditImage);
             const modal = document.getElementById('edit-modal');
             modal.classList.remove('hidden');
@@ -640,7 +488,6 @@ Total output lines: 740
                 const item = state.palette.find(entry => entry.id === id);
                 if (item) {
                     const previous = { name: item.name, color: item.color, size: item.size };
-                    if (this.playerMode && item.category === 'nemici') return;
                     const linked = state.boardTokens.filter(token => token.templateId === item.id || (!token.templateId && token.name === previous.name && token.color === previous.color && token.size === previous.size));
                     Object.assign(item, { name, color, size, category: document.getElementById('edit-token-category').value, opacity });
                     if (this.editImageChanged) item.image = this.pendingEditImage;
