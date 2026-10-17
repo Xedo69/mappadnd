@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="it">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mappa Tattica D&amp;D · Player</title>
+    <style>html,body,iframe{width:100%;height:100%;margin:0;border:0;background:#020617;display:block}</style>
+</head>
+<body>
+    <iframe id="player-map" title="Mappa giocatore"></iframe>
+    <script>
+        const entry = new URLSearchParams(window.location.search).get('entry') || 'account';
+        document.getElementById('player-map').src = `./index.html?mode=player&role=player&entry=${encodeURIComponent(entry)}`;
+    </script>
+</body>
+</html>
