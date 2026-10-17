@@ -7,7 +7,9 @@
     <title>Mappa Tattica D&D</title>
     <script>
         (() => {
-            const entry = sessionStorage.getItem('dnd-cloud-login-approved');
+            const params = new URLSearchParams(window.location.search);
+            let entry = params.get('entry');
+            try { entry ||= sessionStorage.getItem('dnd-cloud-login-approved'); } catch (error) {}
             if (entry !== 'account' && entry !== 'demo') window.location.replace('./login.html');
         })();
     </script>
@@ -526,7 +528,10 @@
         let cloudSaveTimer = null;
         let lastCloudStateJson = null;
         let applyingCloudState = false;
-        const playerMode = new URLSearchParams(window.location.search).get('mode') === 'player' || sessionStorage.getItem('dnd-map-role') === 'player';
+        const pageParams = new URLSearchParams(window.location.search);
+        let storedRole = null;
+        try { storedRole = sessionStorage.getItem('dnd-map-role'); } catch (error) {}
+        const playerMode = pageParams.get('mode') === 'player' || pageParams.get('role') === 'player' || storedRole === 'player';
         const playerDeletedTokenIds = new Set();
 
         const viewport = document.getElementById('map-viewport');
@@ -566,10 +571,10 @@
         }
 
         async function authorizeMapEntry() {
-            const approvedEntry = sessionStorage.getItem(LOGIN_GATE_KEY);
+            let approvedEntry = new URLSearchParams(window.location.search).get('entry');
+            try { approvedEntry ||= sessionStorage.getItem(LOGIN_GATE_KEY); } catch (error) {}
 
             if (approvedEntry === 'demo') {
-                if (cloudClient) await cloudClient.auth.signOut({ scope: 'local' }).catch(() => {});
                 return 'demo';
             }
 
@@ -588,7 +593,7 @@
                 if (error || !data.session) throw error || new Error('Sessione non valida');
                 return playerMode ? 'player' : 'account';
             } catch (error) {
-                sessionStorage.removeItem(LOGIN_GATE_KEY);
+                try { sessionStorage.removeItem(LOGIN_GATE_KEY); } catch (storageError) {}
                 await cloudClient.auth.signOut({ scope: 'local' }).catch(() => {});
                 window.location.replace('./login.html');
                 return false;
@@ -891,7 +896,7 @@
                 returnToLoginButton.classList.remove('hidden');
                 returnToLoginButton.addEventListener('click', async () => {
                     if (cloudClient) await cloudClient.auth.signOut({ scope: 'local' }).catch(() => {});
-                    sessionStorage.removeItem(LOGIN_GATE_KEY);
+                    try { sessionStorage.removeItem(LOGIN_GATE_KEY); } catch (storageError) {}
                     window.location.replace('./login.html');
                 });
                 setCloudConnectionStatus(false);
@@ -941,7 +946,7 @@
                 const { error } = await cloudClient.auth.signOut({ scope: 'local' });
                 if (error) setCloudStatus(error.message, true);
                 else {
-                    sessionStorage.removeItem(LOGIN_GATE_KEY);
+                    try { sessionStorage.removeItem(LOGIN_GATE_KEY); } catch (storageError) {}
                     window.location.replace('./login.html');
                 }
             });
