@@ -1,4 +1,4 @@
-Warning: truncated output (original token count: 19480)
+Warning: truncated output (original token count: 19484)
 Total output lines: 1424
 
 <!DOCTYPE html>
@@ -339,7 +339,7 @@ Total output lines: 1424
                 document.body.classList.remove('auth-checking');
                 const loading = document.getElementById('auth-loading');
                 if (!loading) return;
-                const detail = error?.message || String(error || 'Errore sconosciuto');
+                const detail = error?.stack || error?.message || String(error || 'Errore sconosciuto');
                 loading.replaceChildren();
                 loading.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;background:#0f172a;color:#fecaca;font:500 14px Inter,sans-serif;text-align:center';
                 const title = document.createElement('strong');
@@ -613,7 +613,75 @@ Total output lines: 1424
                 return false;
             }
 
-            try …1480 tokens truncated… token.templateId);
+            try {
+                const sessionResult = await Promise.race([
+                    cloudClient.auth.getSession(),
+                    new Promise((_, reject) => window.setTimeout(() => reject(new Error('Verifica sessione scaduta')), 8000))
+                ]);
+                const { data, error } = sessionResult;
+                if (error || !data.session) throw error || new Error('Sessione non valida');
+                return playerMode ? 'player' : 'account';
+            } catch (error) {
+                try { sessionStorage.removeItem(LOGIN_GATE_KEY); } catch (storageError) {}
+                await cloudClient.auth.signOut({ scope: 'local' }).catch(() => {});
+                window.location.replace('./login.html');
+                return false;
+            }
+        }
+
+        async function init() {
+            const entryMode = await authorizeMapEntry();
+            if (!entryMode) return;
+            document.body.classList.toggle('player-mode', entryMode === 'player');
+            tokenManager.setPlayerMode?.(entryMode === 'player');
+            document.body.classList.remove('auth-checking');
+            renderPalette();
+            renderBoardTokens();
+            renderSavedMaps();
+            applyMapSettings();
+            setupPanningAndZoom();
+            setSidebarCollapsed(window.matchMedia('(max-width: 768px)').matches);
+            centerMap();
+            if (state.map.autoFitImage && isImageUrl(state.map.bg)) fitMapToImage(state.map.bg);
+            initializeCloudSync(entryMode === 'demo');
+        }
+
+        function setSidebarCollapsed(collapsed) {
+            mapSidebar.classList.toggle('sidebar-collapsed', collapsed);
+            document.body.classList.toggle('sidebar-collapsed', collapsed);
+            document.body.classList.toggle('mobile-menu-open', !collapsed);
+            editToggleButton.setAttribute('aria-expanded', String(!collapsed));
+            const isMobile = window.matchMedia('(max-width: 768px)').matches;
+     …484 tokens truncated…(saved.map && typeof saved.map === 'object') {
+                    state.map.cols = Math.max(5, Math.min(200, parseInt(saved.map.cols, 10) || state.map.cols));
+                    state.map.rows = Math.max(5, Math.min(200, parseInt(saved.map.rows, 10) || state.map.rows));
+                    state.map.cellSize = Math.max(5, Math.min(100, parseInt(saved.map.cellSize, 10) || state.map.cellSize));
+                    state.map.bg = typeof saved.map.bg === 'string' ? saved.map.bg : state.map.bg;
+                    state.map.showGrid = saved.map.showGrid !== false;
+                    state.map.snapToGrid = saved.map.snapToGrid !== false;
+                    state.map.autoFitImage = saved.map.autoFitImage !== false;
+                    state.map.widthPx = Number(saved.map.widthPx) > 0 ? Number(saved.map.widthPx) : state.map.cols * state.map.cellSize;
+                    state.map.heightPx = Number(saved.map.heightPx) > 0 ? Number(saved.map.heightPx) : state.map.rows * state.map.cellSize;
+                }
+                document.getElementById('map-cols').value = state.map.cols;
+                document.getElementById('map-rows').value = state.map.rows;
+                document.getElementById('map-bg').value = '';
+                toggleGridCheckbox.checked = state.map.showGrid;
+                snapToGridCheckbox.checked = state.map.snapToGrid;
+                autoFitImageCheckbox.checked = state.map.autoFitImage;
+                cellSizeInput.value = state.map.cellSize;
+                cellSizeNumber.value = state.map.cellSize;
+            } catch (error) {
+                state.palette = [];
+                state.boardTokens = [];
+                state.savedMaps = [];
+                console.warn('Impossibile recuperare le pedine salvate:', error);
+            }
+        }
+
+        function isAdventurerToken(token, palette = state.palette) {
+            if (token.category) return token.category !== 'nemici';
+            const template = palette.find(item => item.id === token.templateId);
             return !template || template.category !== 'nemici';
         }
 
