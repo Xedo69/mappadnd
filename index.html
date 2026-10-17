@@ -89,14 +89,6 @@
             cursor: grabbing;
         }
 
-        .audio-wave {
-            animation: bounce 1s infinite ease-in-out;
-        }
-        @keyframes bounce {
-            0%, 100% { height: 4px; }
-            50% { height: 16px; }
-        }
-
         @media (max-width: 768px) {
             body { flex-direction: column; }
             aside {
@@ -154,7 +146,7 @@
             aside input:not([type="checkbox"]):not([type="range"]):not([type="color"]), aside select {
                 font-size: 16px;
             }
-            #token-palette { max-height: 120px; }
+            #token-palette-adventurers, #token-palette-enemies { max-height: 120px; }
             #btn-zoom-in, #btn-zoom-out { min-width: 44px; min-height: 44px; }
             .mobile-edit-toggle { display: inline-flex; }
             aside.sidebar-collapsed #map-controls { display: none; }
@@ -200,6 +192,108 @@
         @media (max-width: 768px) {
             #btn-toggle-edit.mobile-edit-toggle { display: inline-flex; }
         }
+
+        /* Sidebar refresh: clearer hierarchy, softer surfaces and consistent controls. */
+        #map-sidebar {
+            background: linear-gradient(165deg, #111c31 0%, #0b1220 100%);
+            border-color: rgba(100, 116, 139, 0.28);
+            box-shadow: 18px 0 48px rgba(2, 6, 23, 0.28);
+        }
+        #map-sidebar-header {
+            background: linear-gradient(110deg, rgba(30, 41, 59, 0.94), rgba(15, 23, 42, 0.98));
+            border-color: rgba(100, 116, 139, 0.25);
+        }
+        #map-sidebar-header h1 { letter-spacing: -0.025em; }
+        #map-controls { padding: 1rem; gap: 1rem; }
+        #map-controls > section {
+            border: 1px solid rgba(100, 116, 139, 0.3);
+            border-radius: 1rem;
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.78), rgba(15, 23, 42, 0.82));
+            box-shadow: 0 10px 26px rgba(2, 6, 23, 0.18), inset 0 1px rgba(255,255,255,0.025);
+            padding: 1rem;
+        }
+        #map-controls > section h2,
+        #map-controls > section > details > summary { letter-spacing: 0.09em; }
+        #map-controls details:not(#cloud-sync-details) {
+            border-color: rgba(100, 116, 139, 0.32);
+            border-radius: 0.8rem;
+            background: rgba(2, 6, 23, 0.32);
+            transition: border-color 160ms ease, background 160ms ease;
+        }
+        #map-controls details:not(#cloud-sync-details):hover,
+        #map-controls details:not(#cloud-sync-details)[open] {
+            border-color: rgba(129, 140, 248, 0.42);
+            background: rgba(15, 23, 42, 0.75);
+        }
+        #map-controls input[type="text"], #map-controls input[type="email"],
+        #map-controls input[type="password"], #map-controls select {
+            border-color: rgba(100, 116, 139, 0.48);
+            border-radius: 0.7rem;
+            background-color: rgba(2, 6, 23, 0.62);
+            transition: border-color 150ms ease, box-shadow 150ms ease;
+        }
+        #map-controls input[type="text"]:focus, #map-controls input[type="email"]:focus,
+        #map-controls input[type="password"]:focus, #map-controls select:focus {
+            border-color: rgba(129, 140, 248, 0.8);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.14);
+        }
+        #map-controls button, #map-controls label[for] { transition: filter 150ms ease, transform 150ms ease; }
+        #map-controls button:hover { filter: brightness(1.12); }
+        #map-controls button:active { transform: scale(0.98); }
+        #btn-open-menu, #btn-toggle-edit { -webkit-tap-highlight-color: transparent; }
+        #token-palette-adventurers, #token-palette-enemies { padding-top: 0.2rem; }
+        #map-controls .palette-item {
+            min-height: 3.25rem;
+            border-color: rgba(100, 116, 139, 0.34);
+            border-radius: 0.8rem;
+            background: rgba(30, 41, 59, 0.66);
+            padding: 0.55rem;
+        }
+        #map-controls .palette-item:hover {
+            border-color: rgba(129, 140, 248, 0.5);
+            background: rgba(51, 65, 85, 0.72);
+            transform: translateY(-1px);
+        }
+        #map-controls .palette-avatar { width: 2.25rem; height: 2.25rem; }
+        #map-controls > div:last-child { border-color: rgba(100, 116, 139, 0.24); }
+        @media (min-width: 769px) {
+            #map-sidebar { width: 22rem; }
+            #map-sidebar { transition: margin-left 240ms cubic-bezier(0.22, 1, 0.36, 1); }
+            #btn-toggle-edit {
+                display: inline-flex;
+                min-height: 36px;
+                padding: 0 0.7rem;
+                border: 1px solid rgba(129, 140, 248, 0.35);
+                border-radius: 0.75rem;
+                background: rgba(79, 70, 229, 0.16);
+                color: #c7d2fe;
+                font-size: 0.7rem;
+                font-weight: 600;
+                transition: background 150ms ease, border-color 150ms ease;
+            }
+            #btn-toggle-edit:hover { background: rgba(79, 70, 229, 0.28); border-color: rgba(129, 140, 248, 0.6); }
+            body.sidebar-collapsed #map-sidebar { margin-left: -22rem; }
+            body.sidebar-collapsed #btn-open-menu {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.55rem;
+                position: absolute;
+                z-index: 30;
+                top: 1rem;
+                left: 1rem;
+                min-height: 44px;
+                padding: 0 1rem;
+                border: 1px solid rgba(129, 140, 248, 0.42);
+                border-radius: 999px;
+                background: rgba(49, 46, 129, 0.94);
+                color: #fff;
+                box-shadow: 0 8px 24px rgba(2, 6, 23, 0.52);
+                backdrop-filter: blur(12px);
+                font-size: 0.85rem;
+                font-weight: 600;
+            }
+        }
     </style>
 </head>
 <body class="auth-checking flex h-screen w-screen bg-slate-950 font-sans">
@@ -212,9 +306,9 @@
                 Mappa Tattica D&D
             </h1>
             <button id="btn-toggle-edit" class="mobile-edit-toggle items-center justify-center gap-2 text-xs" aria-expanded="false" aria-controls="map-controls" aria-label="Apri il menu di modifica">
-                <svg id="menu-closed-icon" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-                <svg id="menu-open-icon" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
-                <span id="edit-toggle-label">Menu</span>
+                <svg id="menu-closed-icon" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 6 6 6-6 6M5 6l6 6-6 6"/></svg>
+                <svg id="menu-open-icon" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m13 18-6-6 6-6M19 18l-6-6 6-6"/></svg>
+                <span id="edit-toggle-label" class="sr-only">Menu</span>
             </button>
         </div>
 
@@ -261,7 +355,10 @@
             
             <!-- Impostazioni Mappa -->
             <section class="bg-slate-800/90 p-3 rounded-lg border border-slate-700 text-xs">
-                <h2 class="font-semibold text-slate-300 uppercase tracking-wider mb-2.5">Impostazioni Mappa</h2>
+                <h2 class="mb-2.5 flex items-center gap-2 font-semibold uppercase tracking-wider text-slate-300">
+                    <img src="https://i.pinimg.com/736x/f8/90/e6/f890e6806ef8283ea576d82315dec6a9.jpg" alt="" aria-hidden="true" class="h-6 w-6 rounded object-cover">
+                    <span>Impostazioni Mappa</span>
+                </h2>
                 <div class="mb-2">
                     <label class="block text-slate-400 mb-1">Sfondo (URL Immagine o Colore HEX)</label>
                     <input type="text" id="map-bg" placeholder="es. #228b22 o https://..." class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-indigo-500">
@@ -328,41 +425,10 @@
 
             <!-- Crea Pedina -->
             <section class="bg-slate-800/90 p-3 rounded-lg border border-slate-700 text-xs">
-                <details>
-                    <summary class="flex items-center justify-between cursor-pointer select-none font-semibold text-slate-300 uppercase tracking-wider hover:text-white">
-                        <span>Crea Pedina</span>
-                        <svg class="saved-maps-chevron w-3.5 h-3.5 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.09 1.032l-4.255 4.515a.75.75 0 0 1-1.09 0L5.21 8.263a.75.75 0 0 1 .02-1.052Z" clip-rule="evenodd"/></svg>
-                    </summary>
-                    <div class="space-y-2 mt-2.5">
-                    <div>
-                        <label class="block text-slate-400 mb-1">Nome Pedina</label>
-                        <input type="text" id="token-name" placeholder="es. Paladino, Drago, Scheletro..." class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-indigo-500">
-                    </div>
-                    <div class="flex gap-2">
-                        <div class="w-16">
-                            <label class="block text-slate-400 mb-1">Colore</label>
-                            <input type="color" id="token-color" value="#dc2626" class="w-full h-7 bg-slate-900 border border-slate-600 rounded cursor-pointer p-0.5">
-                        </div>
-                        <div class="flex-1">
-                            <label class="block text-slate-400 mb-1">Taglia</label>
-                            <select id="token-size" class="w-full h-7 bg-slate-900 border border-slate-600 rounded px-2 text-xs text-white focus:outline-none focus:border-indigo-500">
-                                <option value="1">Media (1x1)</option>
-                                <option value="2">Grande (2x2)</option>
-                                <option value="3">Enorme (3x3)</option>
-                                <option value="4">Mastodontica (4x4)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="token-image" class="block text-slate-400 mb-1">Immagine pedina (facoltativa)</label>
-                        <div class="flex items-center gap-2">
-                            <input type="file" id="token-image" accept="image/*" class="min-w-0 flex-1 text-[10px] text-slate-300 file:mr-2 file:rounded file:border-0 file:bg-slate-700 file:px-2 file:py-1 file:text-slate-200">
-                            <img id="token-image-preview" class="hidden w-9 h-9 rounded-full border border-white/50 object-cover" alt="Anteprima immagine pedina">
-                        </div>
-                    </div>
-                    <button id="btn-create-token" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 rounded transition font-medium mt-1">Aggiungi alla Palette</button>
-                    </div>
-                </details>
+                <button id="btn-open-token-create" type="button" aria-haspopup="dialog" class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-400/30 bg-gradient-to-r from-emerald-600 to-teal-600 px-3 py-2.5 text-xs font-semibold text-white shadow-lg shadow-emerald-950/30 transition hover:-translate-y-0.5 hover:from-emerald-500 hover:to-teal-500 focus:outline-none focus:ring-2 focus:ring-emerald-300">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                    <span>Crea personaggio</span>
+                </button>
             </section>
 
             <!-- Palette Pedine -->
@@ -371,56 +437,31 @@
                     <h2 class="font-semibold text-slate-300 uppercase tracking-wider">Pedine</h2>
                     <span class="text-[10px] text-slate-400">Trascina sulla mappa</span>
                 </div>
-                <div id="token-palette" class="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
-                    <p id="empty-palette-msg" class="text-slate-500 text-center py-3 italic">Nessuna pedina. Creane una sopra!</p>
+                <div class="space-y-2">
+                    <details class="rounded-md border border-slate-700 bg-slate-900/60">
+                        <summary class="flex cursor-pointer select-none items-center justify-between px-2.5 py-2 font-semibold text-slate-300 hover:text-white">
+                            <span>Avventurieri</span>
+                            <span id="adventurer-token-count" class="text-[10px] text-slate-500">0</span>
+                        </summary>
+                        <div id="token-palette-adventurers" class="flex max-h-48 flex-col gap-1.5 overflow-y-auto px-2 pb-2 pr-3">
+                            <p class="empty-category-msg py-2 text-center italic text-slate-500">Nessun avventuriero</p>
+                        </div>
+                    </details>
+                    <details class="rounded-md border border-slate-700 bg-slate-900/60">
+                        <summary class="flex cursor-pointer select-none items-center justify-between px-2.5 py-2 font-semibold text-slate-300 hover:text-white">
+                            <span>Nemici</span>
+                            <span id="enemy-token-count" class="text-[10px] text-slate-500">0</span>
+                        </summary>
+                        <div id="token-palette-enemies" class="flex max-h-48 flex-col gap-1.5 overflow-y-auto px-2 pb-2 pr-3">
+                            <p class="empty-category-msg py-2 text-center italic text-slate-500">Nessun nemico</p>
+                        </div>
+                    </details>
                 </div>
             </section>
 
             <!-- Musica & Atmosfera YouTube -->
-            <section class="bg-slate-800/90 p-3 rounded-lg border border-slate-700 text-xs">
-                <div class="flex justify-between items-center mb-2">
-                    <h2 class="font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                        <svg class="w-3.5 h-3.5 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
-                        Musica YouTube
-                    </h2>
-                    <button id="btn-stop-audio" class="text-[10px] text-rose-400 hover:text-rose-300 bg-rose-950/60 border border-rose-800 px-2 py-0.5 rounded transition">Ferma</button>
-                </div>
+            <youtube-music id="youtube-music" class="block w-full"></youtube-music>
 
-                <div class="flex gap-1.5 mb-2">
-                    <input type="text" id="yt-url-input" placeholder="Incolla link YouTube..." class="flex-1 bg-slate-900 border border-slate-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-indigo-500 truncate">
-                    <button id="btn-play-custom" class="bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded font-medium transition shrink-0">Avvia</button>
-                </div>
-
-                <!-- Presets -->
-                <div class="grid grid-cols-2 gap-1.5 mb-2">
-                    <button class="btn-preset bg-slate-900 hover:bg-slate-700 border border-slate-700 rounded p-1.5 text-left transition flex items-center gap-1.5 truncate" data-ytid="4xDzrJKXOOY" data-name="Taverna Vivace">
-                        <span>🍺</span> <span class="truncate">Taverna</span>
-                    </button>
-                    <button class="btn-preset bg-slate-900 hover:bg-slate-700 border border-slate-700 rounded p-1.5 text-left transition flex items-center gap-1.5 truncate" data-ytid="k3WKVGKA9E4" data-name="Battaglia Epica">
-                        <span>⚔️</span> <span class="truncate">Combattimento</span>
-                    </button>
-                    <button class="btn-preset bg-slate-900 hover:bg-slate-700 border border-slate-700 rounded p-1.5 text-left transition flex items-center gap-1.5 truncate" data-ytid="g6h0m4_Qy1s" data-name="Dungeon Cupo">
-                        <span>🕯️</span> <span class="truncate">Dungeon</span>
-                    </button>
-                    <button class="btn-preset bg-slate-900 hover:bg-slate-700 border border-slate-700 rounded p-1.5 text-left transition flex items-center gap-1.5 truncate" data-ytid="oW_E5z5Pj_E" data-name="Foresta Misteriosa">
-                        <span>🌲</span> <span class="truncate">Foresta</span>
-                    </button>
-                </div>
-
-                <!-- Status audio in riproduzione -->
-                <div id="audio-status-box" class="hidden bg-slate-950 border border-slate-800 p-2 rounded flex items-center gap-2">
-                    <div class="flex items-end gap-0.5 h-3">
-                        <span class="w-1 bg-emerald-400 audio-wave" style="animation-delay: 0.1s"></span>
-                        <span class="w-1 bg-emerald-400 audio-wave" style="animation-delay: 0.3s"></span>
-                        <span class="w-1 bg-emerald-400 audio-wave" style="animation-delay: 0.2s"></span>
-                    </div>
-                    <span id="current-track-name" class="text-[11px] text-slate-300 truncate flex-1 font-medium">In riproduzione...</span>
-                </div>
-                <div id="yt-player-container" class="hidden mt-2 overflow-hidden rounded-lg border border-slate-700 bg-black">
-                    <div id="yt-player"></div>
-                </div>
-            </section>
-            
             <div class="text-[11px] text-slate-400 border-t border-slate-700 pt-3 space-y-1">
                 <p>🖱️ <b>Sinistro (Sfondo):</b> Pan visuale</p>
                 <p>🖱️ <b>Rotellina:</b> Zoom</p>
@@ -429,6 +470,67 @@
             </div>
         </div>
     </aside>
+
+    <div id="token-create-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm" role="presentation">
+        <section role="dialog" aria-modal="true" aria-labelledby="token-create-title" class="w-full max-w-xl overflow-hidden rounded-3xl border border-emerald-400/20 bg-slate-900 shadow-2xl shadow-black/60">
+            <header class="relative flex items-center justify-between gap-4 overflow-hidden border-b border-white/10 bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-900 px-6 py-5 sm:px-7">
+                <div class="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-emerald-500/10 blur-3xl"></div>
+                <div class="relative flex min-w-0 items-center gap-4">
+                    <span class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-emerald-300/20 bg-emerald-400/10 shadow-inner shadow-emerald-200/5">
+                        <img src="https://i.pinimg.com/736x/8a/ee/3c/8aee3cf9eb3649b4d50c8c900b45c0de.jpg" alt="" aria-hidden="true" class="h-full w-full object-cover">
+                    </span>
+                    <div class="min-w-0">
+                        <span class="mb-1 block text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300/80">Nuovo elemento</span>
+                        <h2 id="token-create-title" class="text-lg font-bold text-white">Crea personaggio</h2>
+                        <p class="mt-1 text-xs text-slate-400">Personalizza aspetto e categoria della pedina.</p>
+                    </div>
+                </div>
+                <button id="btn-close-token-create" type="button" aria-label="Chiudi creazione personaggio" class="relative shrink-0 rounded-xl border border-white/10 bg-white/5 p-2.5 text-slate-300 transition hover:border-white/20 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M4.22 4.22a.75.75 0 0 1 1.06 0L10 8.94l4.72-4.72a.75.75 0 1 1 1.06 1.06L11.06 10l4.72 4.72a.75.75 0 1 1-1.06 1.06L10 11.06l-4.72 4.72a.75.75 0 1 1-1.06-1.06L8.94 10 4.22 5.28a.75.75 0 0 1 0-1.06Z"/></svg>
+                </button>
+            </header>
+            <div class="max-h-[75vh] space-y-5 overflow-y-auto bg-gradient-to-b from-slate-900 to-slate-950 p-6 text-xs sm:p-7">
+                    <div class="space-y-2">
+                        <label for="token-name" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300">Nome del personaggio</label>
+                        <input type="text" id="token-name" placeholder="es. Paladino, Drago, Scheletro..." class="w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-white placeholder:text-slate-600 transition focus:border-emerald-400/70 focus:outline-none focus:ring-2 focus:ring-emerald-400/15">
+                    </div>
+                    <div class="space-y-2">
+                        <label for="token-category" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300">Dove inserirlo</label>
+                        <select id="token-category" class="w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-white transition focus:border-emerald-400/70 focus:outline-none focus:ring-2 focus:ring-emerald-400/15">
+                            <option value="avventurieri">🛡️ Avventurieri</option>
+                            <option value="nemici">👹 Nemici</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-[5rem_1fr] gap-3">
+                        <div class="space-y-2">
+                            <label for="token-color" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300">Colore</label>
+                            <input type="color" id="token-color" value="#dc2626" class="h-12 w-full cursor-pointer rounded-xl border border-slate-700 bg-slate-950 p-1.5">
+                        </div>
+                        <div class="space-y-2">
+                            <label for="token-size" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300">Dimensione sulla griglia</label>
+                            <select id="token-size" class="h-12 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 text-sm text-white transition focus:border-emerald-400/70 focus:outline-none focus:ring-2 focus:ring-emerald-400/15">
+                                <option value="1">Media (1x1)</option>
+                                <option value="2">Grande (2x2)</option>
+                                <option value="3">Enorme (3x3)</option>
+                                <option value="4">Mastodontica (4x4)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="token-image" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300">Ritratto <span class="font-normal normal-case tracking-normal text-slate-500">facoltativo</span></label>
+                        <div class="flex items-center gap-3 rounded-xl border border-dashed border-slate-700 bg-slate-950/50 p-3 transition hover:border-emerald-400/40">
+                            <input type="file" id="token-image" accept="image/*" class="min-w-0 flex-1 text-[11px] text-slate-400 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-2 file:text-xs file:font-medium file:text-slate-200 hover:file:bg-slate-700">
+                            <img id="token-image-preview" class="hidden h-12 w-12 rounded-xl border border-emerald-300/30 object-cover shadow-lg" alt="Anteprima immagine pedina">
+                        </div>
+                        <p class="text-[10px] text-slate-500">Puoi aggiungere o cambiare il ritratto anche più avanti.</p>
+                    </div>
+                    <button id="btn-create-token" type="button" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-950/40 transition hover:-translate-y-0.5 hover:from-emerald-400 hover:to-teal-400 focus:outline-none focus:ring-2 focus:ring-emerald-300">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                        Aggiungi alla palette
+                    </button>
+            </div>
+        </section>
+    </div>
 
     <!-- Area Mappa -->
     <main class="flex-1 relative bg-slate-950 overflow-hidden" id="map-viewport">
@@ -456,6 +558,13 @@
                 <div>
                     <label class="block text-slate-400 mb-1">Nome</label>
                     <input type="text" id="edit-token-name" class="w-full bg-slate-900 border border-slate-600 rounded px-2.5 py-1.5 text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label for="edit-token-category" class="block text-slate-400 mb-1">Categoria</label>
+                    <select id="edit-token-category" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-white focus:outline-none focus:border-indigo-500">
+                        <option value="avventurieri">Avventurieri</option>
+                        <option value="nemici">Nemici</option>
+                    </select>
                 </div>
                 <div class="flex gap-2">
                     <div class="w-16">
@@ -508,6 +617,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js?v=mapfit1"></script>
+    <script src="./youtube-music.js"></script>
     <script>
         const state = {
             map: { cols: 20, rows: 15, widthPx: 800, heightPx: 600, bg: '#334155', showGrid: true, cellSize: 40, snapToGrid: true, autoFitImage: true },
@@ -517,6 +627,8 @@
             savedMaps: [],
             editing: null // { type: 'palette'|'board', id: string }
         };
+        const youtubeMusic = document.getElementById('youtube-music');
+        state.music = youtubeMusic.getSettings();
         const STORAGE_KEY = 'dnd-tactical-map-tokens-v1';
         const LOGIN_GATE_KEY = 'dnd-cloud-login-approved';
         const cloudConfig = window.MAP_CLOUD_CONFIG || {};
@@ -533,8 +645,28 @@
         const viewport = document.getElementById('map-viewport');
         const wrapper = document.getElementById('map-wrapper');
         const mapContainer = document.getElementById('map-container');
-        const paletteContainer = document.getElementById('token-palette');
-        const emptyPaletteMsg = document.getElementById('empty-palette-msg');
+        const paletteContainers = {
+            avventurieri: document.getElementById('token-palette-adventurers'),
+            nemici: document.getElementById('token-palette-enemies')
+        };
+        Object.entries(paletteContainers).forEach(([category, container]) => {
+            container.addEventListener('dragover', (e) => {
+                if (!Array.from(e.dataTransfer.types).includes('application/x-mappadnd-palette-token')) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+            container.addEventListener('drop', (e) => {
+                const templateId = e.dataTransfer.getData('application/x-mappadnd-palette-token');
+                if (!templateId) return;
+                e.preventDefault();
+                e.stopPropagation();
+                const template = state.palette.find(item => item.id === templateId);
+                if (!template || (template.category === 'nemici' ? 'nemici' : 'avventurieri') === category) return;
+                template.category = category;
+                renderPalette();
+                showToast(`"${template.name}" spostata in ${category === 'nemici' ? 'Nemici' : 'Avventurieri'}.`);
+            });
+        });
         const zoomLevelText = document.getElementById('zoom-level');
         const toggleGridCheckbox = document.getElementById('toggle-grid');
         const cellSizeInput = document.getElementById('cell-size');
@@ -589,34 +721,36 @@
             renderSavedMaps();
             applyMapSettings();
             setupPanningAndZoom();
-            setMobileControlsCollapsed(window.matchMedia('(max-width: 768px)').matches);
+            setSidebarCollapsed(window.matchMedia('(max-width: 768px)').matches);
             centerMap();
             if (state.map.autoFitImage && isImageUrl(state.map.bg)) fitMapToImage(state.map.bg);
             initializeCloudSync(entryMode === 'demo');
         }
 
-        function setMobileControlsCollapsed(collapsed) {
+        function setSidebarCollapsed(collapsed) {
             mapSidebar.classList.toggle('sidebar-collapsed', collapsed);
+            document.body.classList.toggle('sidebar-collapsed', collapsed);
             document.body.classList.toggle('mobile-menu-open', !collapsed);
             editToggleButton.setAttribute('aria-expanded', String(!collapsed));
-            editToggleLabel.textContent = collapsed ? 'Menu' : 'Chiudi';
-            editToggleButton.setAttribute('aria-label', collapsed ? 'Apri il menu di modifica' : 'Chiudi il menu di modifica');
-            editToggleButton.title = collapsed ? 'Mostra i controlli di modifica' : 'Nascondi i controlli di modifica';
+            const isMobile = window.matchMedia('(max-width: 768px)').matches;
+            editToggleLabel.textContent = collapsed ? (isMobile ? 'Menu' : 'Mostra menu') : (isMobile ? 'Chiudi' : 'Nascondi menu');
+            editToggleButton.setAttribute('aria-label', collapsed ? 'Mostra le impostazioni e i controlli' : 'Nascondi le impostazioni e i controlli');
+            editToggleButton.title = collapsed ? 'Mostra la barra laterale' : 'Nascondi la barra laterale';
         }
 
         editToggleButton.addEventListener('click', () => {
-            setMobileControlsCollapsed(!mapSidebar.classList.contains('sidebar-collapsed'));
+            setSidebarCollapsed(!mapSidebar.classList.contains('sidebar-collapsed'));
             requestAnimationFrame(centerMap);
         });
 
         openMenuButton.addEventListener('click', () => {
-            setMobileControlsCollapsed(false);
+            setSidebarCollapsed(false);
             requestAnimationFrame(centerMap);
         });
 
         window.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' && window.matchMedia('(max-width: 768px)').matches && !mapSidebar.classList.contains('sidebar-collapsed')) {
-                setMobileControlsCollapsed(true);
+                setSidebarCollapsed(true);
                 requestAnimationFrame(centerMap);
             }
         });
@@ -632,6 +766,7 @@
                     if (template) token.templateId = template.id;
                 });
                 state.savedMaps = Array.isArray(saved.savedMaps) ? saved.savedMaps : [];
+                state.music = youtubeMusic.setSettings(saved.music, { emit: false });
                 if (saved.map && typeof saved.map === 'object') {
                     state.map.cols = Math.max(5, Math.min(200, parseInt(saved.map.cols, 10) || state.map.cols));
                     state.map.rows = Math.max(5, Math.min(200, parseInt(saved.map.rows, 10) || state.map.rows));
@@ -664,7 +799,8 @@
                 palette: state.palette,
                 boardTokens: state.boardTokens,
                 savedMaps: state.savedMaps,
-                map: state.map
+                map: state.map,
+                music: youtubeMusic.getSettings()
             };
         }
 
@@ -683,6 +819,12 @@
             clearTimeout(cloudSaveTimer);
             cloudSaveTimer = setTimeout(saveStateToCloud, 900);
         }
+
+        youtubeMusic.addEventListener('music-settings-change', event => {
+            state.music = event.detail;
+            saveTokens();
+        });
+        youtubeMusic.addEventListener('music-toast', event => showToast(event.detail));
 
         function exportMapBackup() {
             const blob = new Blob([JSON.stringify(getPersistedState(), null, 2)], { type: 'application/json' });
@@ -719,6 +861,7 @@
                 state.palette = Array.isArray(saved.palette) ? saved.palette : [];
                 state.boardTokens = Array.isArray(saved.boardTokens) ? saved.boardTokens : [];
                 state.savedMaps = Array.isArray(saved.savedMaps) ? saved.savedMaps : [];
+                state.music = youtubeMusic.setSettings(saved.music, { emit: false });
                 if (saved.map && typeof saved.map === 'object') {
                     state.map.cols = Math.max(5, Math.min(200, parseInt(saved.map.cols, 10) || 20));
                     state.map.rows = Math.max(5, Math.min(200, parseInt(saved.map.rows, 10) || 15));
@@ -1314,6 +1457,25 @@
 
         const tokenImageInput = document.getElementById('token-image');
         const tokenImagePreview = document.getElementById('token-image-preview');
+        const tokenCreateModal = document.getElementById('token-create-modal');
+        const openTokenCreateButton = document.getElementById('btn-open-token-create');
+        function closeTokenCreateModal() {
+            tokenCreateModal.classList.add('hidden');
+            tokenCreateModal.classList.remove('flex');
+            openTokenCreateButton.focus();
+        }
+        openTokenCreateButton.addEventListener('click', () => {
+            tokenCreateModal.classList.remove('hidden');
+            tokenCreateModal.classList.add('flex');
+            document.getElementById('token-name').focus();
+        });
+        document.getElementById('btn-close-token-create').addEventListener('click', closeTokenCreateModal);
+        tokenCreateModal.addEventListener('click', event => {
+            if (event.target === tokenCreateModal) closeTokenCreateModal();
+        });
+        window.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && !tokenCreateModal.classList.contains('hidden')) closeTokenCreateModal();
+        });
         tokenImageInput.addEventListener('change', async () => {
             const file = tokenImageInput.files[0];
             if (!file) return;
@@ -1332,10 +1494,11 @@
             const name = document.getElementById('token-name').value.trim() || 'Pedina';
             const color = document.getElementById('token-color').value;
             const size = parseInt(document.getElementById('token-size').value);
+            const category = document.getElementById('token-category').value;
             
             state.palette.push({
                 id: 'pal_' + Date.now() + Math.random().toString(16).slice(2),
-                name, color, size, opacity: 100, image: pendingTokenImage
+                name, color, size, category, opacity: 100, image: pendingTokenImage
             });
             document.getElementById('token-name').value = '';
             pendingTokenImage = null;
@@ -1343,20 +1506,29 @@
             tokenImagePreview.removeAttribute('src');
             tokenImagePreview.classList.add('hidden');
             renderPalette();
+            closeTokenCreateModal();
         });
 
         function renderPalette() {
-            paletteContainer.querySelectorAll('.palette-item').forEach(el => el.remove());
-            emptyPaletteMsg.style.display = state.palette.length === 0 ? 'block' : 'none';
+            Object.values(paletteContainers).forEach(container => {
+                container.querySelectorAll('.palette-item').forEach(el => el.remove());
+                container.querySelector('.empty-category-msg').style.display = 'block';
+            });
+            document.getElementById('adventurer-token-count').textContent = state.palette.filter(template => (template.category || 'avventurieri') === 'avventurieri').length;
+            document.getElementById('enemy-token-count').textContent = state.palette.filter(template => template.category === 'nemici').length;
 
             state.palette.forEach(template => {
+                const category = template.category === 'nemici' ? 'nemici' : 'avventurieri';
+                const targetPalette = paletteContainers[category];
+                targetPalette.querySelector('.empty-category-msg').style.display = 'none';
                 const el = document.createElement('div');
                 el.className = 'palette-item bg-slate-800/90 border border-slate-700 rounded-lg p-1.5 flex items-center gap-2 hover:bg-slate-700 transition select-none';
                 el.draggable = !window.matchMedia('(pointer: coarse)').matches;
                 
                 el.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('text/plain', JSON.stringify(template));
-                    e.dataTransfer.effectAllowed = 'copy';
+                    e.dataTransfer.setData('application/x-mappadnd-palette-token', template.id);
+                    e.dataTransfer.effectAllowed = 'copyMove';
                 });
 
                 el.addEventListener('click', (e) => {
@@ -1371,6 +1543,7 @@
                         <p class="font-semibold text-white truncate text-xs">${template.name}</p>
                         <p class="text-[10px] text-slate-400 leading-tight">${template.size}x${template.size} quadretti</p>
                     </div>
+                    <button class="btn-toggle-token-visibility p-1 text-slate-400 hover:text-white" type="button"></button>
                     <button class="btn-edit-pal p-1 text-slate-400 hover:text-white" title="Modifica pedina">✏️</button>
                     <button class="btn-del-pal p-1 text-slate-400 hover:text-rose-400" title="Elimina dalla lista">🗑️</button>
                 `;
@@ -1383,6 +1556,31 @@
                     avatar.style.backgroundPosition = 'center';
                     avatar.textContent = '';
                 }
+
+                const visibilityButton = el.querySelector('.btn-toggle-token-visibility');
+                const getLinkedTokens = () => state.boardTokens.filter(token =>
+                    token.templateId === template.id || (!token.templateId && token.name === template.name && token.color === template.color && token.size === template.size)
+                );
+                const updateVisibilityButton = () => {
+                    const linkedTokens = getLinkedTokens();
+                    const allHidden = linkedTokens.length > 0 && linkedTokens.every(token => token.hidden);
+                    visibilityButton.textContent = allHidden ? '🙈' : '👁️';
+                    visibilityButton.title = allHidden ? 'Mostra le pedine sulla mappa' : 'Nascondi le pedine sulla mappa';
+                    visibilityButton.setAttribute('aria-label', visibilityButton.title);
+                };
+                updateVisibilityButton();
+                visibilityButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const linkedTokens = getLinkedTokens();
+                    if (linkedTokens.length === 0) {
+                        showToast('Questa pedina non è ancora stata posizionata sulla mappa.');
+                        return;
+                    }
+                    const shouldHide = linkedTokens.some(token => !token.hidden);
+                    linkedTokens.forEach(token => { token.hidden = shouldHide; });
+                    renderBoardTokens();
+                    updateVisibilityButton();
+                });
 
                 el.querySelector('.btn-edit-pal').addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -1407,7 +1605,7 @@
                     renderBoardTokens();
                 });
 
-                paletteContainer.appendChild(el);
+                targetPalette.appendChild(el);
             });
             saveTokens();
         }
@@ -1485,6 +1683,7 @@
             mapContainer.querySelectorAll('.token').forEach(el => el.remove());
 
             state.boardTokens.forEach(token => {
+                if (token.hidden) return;
                 const el = document.createElement('div');
                 el.className = 'token';
                 el.id = token.id;
@@ -1592,6 +1791,7 @@
         const editModal = document.getElementById('edit-modal');
         const editNameInput = document.getElementById('edit-token-name');
         const editColorInput = document.getElementById('edit-token-color');
+        const editCategoryInput = document.getElementById('edit-token-category');
         const editSizeInput = document.getElementById('edit-token-size');
         const editOpacityInput = document.getElementById('edit-token-opacity');
         const editOpacityValue = document.getElementById('edit-token-opacity-value');
@@ -1642,6 +1842,7 @@
             state.editing = { type, id };
             editNameInput.value = item.name;
             editColorInput.value = item.color;
+            editCategoryInput.value = item.category === 'nemici' ? 'nemici' : 'avventurieri';
             editSizeInput.value = item.size;
             editOpacityInput.value = item.opacity ?? 100;
             editOpacityValue.textContent = `${editOpacityInput.value}%`;
@@ -1682,6 +1883,7 @@
                     item.name = newName;
                     item.color = newColor;
                     item.size = newSize;
+                    item.category = editCategoryInput.value;
                     item.opacity = newOpacity;
                     if (editImageChanged) item.image = pendingEditImage;
                     linkedTokens.forEach(token => {
@@ -1708,92 +1910,7 @@
             closeEditModal();
         });
 
-        // --- Riproduttore YouTube (Audio di Sfondo) ---
-        let ytPlayer = null;
-        let isYtReady = false;
-
-        window.onYouTubeIframeAPIReady = function() {
-            ytPlayer = new YT.Player('yt-player', {
-                height: '200',
-                width: '260',
-                playerVars: {
-                    autoplay: 0,
-                    controls: 1,
-                    playsinline: 1
-                },
-                events: {
-                    onReady: () => { isYtReady = true; },
-                    onStateChange: (event) => {
-                        if (event.data === YT.PlayerState.PLAYING) {
-                            document.getElementById('audio-status-box').classList.remove('hidden');
-                            showToast('Riproduzione avviata.');
-                        }
-                    },
-                    onError: (event) => {
-                        const errors = {
-                            2: 'ID video non valido.',
-                            5: 'Il video non è riproducibile nel player HTML5.',
-                            100: 'Video non trovato o non più disponibile.',
-                            101: 'Il proprietario non consente la riproduzione incorporata.',
-                            150: 'Il proprietario non consente la riproduzione incorporata.',
-                            153: 'YouTube non riceve i dati di origine. Chiudi questa scheda, avvia la mappa con "Avvia Mappa.bat" e riprova.'
-                        };
-                        showToast(errors[event.data] || `Errore del player YouTube (${event.data}).`);
-                    }
-                }
-            });
-        };
-
-        const tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-        function extractYouTubeID(url) {
-            const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[7].length === 11) ? match[7] : (url.length === 11 ? url : null);
-        }
-
-        function playYouTubeAudio(videoId, trackTitle) {
-            if (!isYtReady || !ytPlayer) {
-                showToast("Caricamento player YouTube in corso...");
-                return;
-            }
-            document.getElementById('yt-player-container').classList.remove('hidden');
-            ytPlayer.loadVideoById(videoId);
-            ytPlayer.playVideo();
-
-            document.getElementById('current-track-name').innerText = trackTitle;
-            showToast('Avvio del player YouTube...');
-        }
-
-        document.getElementById('btn-play-custom').addEventListener('click', () => {
-            const url = document.getElementById('yt-url-input').value.trim();
-            const videoId = extractYouTubeID(url);
-            if (!videoId) {
-                showToast("URL YouTube non valido o non riconosciuto.");
-                return;
-            }
-            playYouTubeAudio(videoId, "Traccia Personalizzata");
-        });
-
-        document.querySelectorAll('.btn-preset').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const ytid = btn.dataset.ytid;
-                const name = btn.dataset.name;
-                playYouTubeAudio(ytid, name);
-            });
-        });
-
-        document.getElementById('btn-stop-audio').addEventListener('click', () => {
-            if (ytPlayer && typeof ytPlayer.stopVideo === 'function') {
-                ytPlayer.stopVideo();
-            }
-            document.getElementById('audio-status-box').classList.add('hidden');
-            document.getElementById('yt-player-container').classList.add('hidden');
-            showToast("Audio fermato.");
-        });
+        // Player e controlli YouTube gestiti da youtube-music.js.
 
         const serverOfflineAlert = document.getElementById('server-offline-alert');
         const serverPageClientId = `map-page-${Date.now()}-${Math.random().toString(16).slice(2)}`;
