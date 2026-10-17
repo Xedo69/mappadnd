@@ -105,11 +105,14 @@
             demoButton.disabled = busy;
         }
 
-        function chooseRole() {
+        let selectedEntryMode = 'account';
+
+        function chooseRole(mode = 'account') {
+            selectedEntryMode = mode;
             setBusy(false);
             form.classList.add('hidden');
             document.getElementById('role-picker').classList.remove('hidden');
-            document.getElementById('connection-label').textContent = 'Accesso riuscito';
+            document.getElementById('connection-label').textContent = mode === 'demo' ? 'Modalità demo' : 'Accesso riuscito';
         }
 
         function enterMap(mode = 'account', role = 'master') {
@@ -120,16 +123,16 @@
                 // The URL carries the entry mode when local-file storage is unavailable.
             }
             const params = new URLSearchParams({ entry: mode, role });
-            const target = mode === 'demo' || role === 'master' ? './index.html' : './player.html';
+            const target = role === 'master' ? './master.html' : './player.html';
             window.location.replace(`${target}?${params.toString()}`);
         }
 
-        document.getElementById('enter-master').addEventListener('click', () => enterMap('account', 'master'));
-        document.getElementById('enter-player').addEventListener('click', () => enterMap('account', 'player'));
+        document.getElementById('enter-master').addEventListener('click', () => enterMap(selectedEntryMode, 'master'));
+        document.getElementById('enter-player').addEventListener('click', () => enterMap(selectedEntryMode, 'player'));
 
         demoButton.addEventListener('click', async () => {
             setBusy(true);
-            enterMap('demo');
+            chooseRole('demo');
         });
 
         if (!cloudEnabled) {
