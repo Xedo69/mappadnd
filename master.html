@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 19484)
-Total output lines: 1424
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -353,7 +350,10 @@ Total output lines: 1424
                 loading.append(title, message, back);
                 console.error('Avvio mappa non riuscito:', error);
             };
-            window.addEventListener('error', event => showStartupError(event.error || event.message));
+            window.addEventListener('error', event => {
+                const location = event.filename ? ` (${event.filename}:${event.lineno}:${event.colno})` : '';
+                showStartupError(event.error || `${event.message || 'Errore JavaScript'}${location}`);
+            });
             window.addEventListener('unhandledrejection', event => showStartupError(event.reason));
             window.addEventListener('map-startup-error', event => showStartupError(event.detail));
         })();
@@ -652,7 +652,41 @@ Total output lines: 1424
             document.body.classList.toggle('mobile-menu-open', !collapsed);
             editToggleButton.setAttribute('aria-expanded', String(!collapsed));
             const isMobile = window.matchMedia('(max-width: 768px)').matches;
-     …484 tokens truncated…(saved.map && typeof saved.map === 'object') {
+            editToggleLabel.textContent = collapsed ? (isMobile ? 'Menu' : 'Mostra menu') : (isMobile ? 'Chiudi' : 'Nascondi menu');
+            editToggleButton.setAttribute('aria-label', collapsed ? 'Mostra le impostazioni e i controlli' : 'Nascondi le impostazioni e i controlli');
+            editToggleButton.title = collapsed ? 'Mostra la barra laterale' : 'Nascondi la barra laterale';
+        }
+
+        editToggleButton.addEventListener('click', () => {
+            setSidebarCollapsed(!mapSidebar.classList.contains('sidebar-collapsed'));
+            requestAnimationFrame(centerMap);
+        });
+
+        openMenuButton.addEventListener('click', () => {
+            setSidebarCollapsed(false);
+            requestAnimationFrame(centerMap);
+        });
+
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && window.matchMedia('(max-width: 768px)').matches && !mapSidebar.classList.contains('sidebar-collapsed')) {
+                setSidebarCollapsed(true);
+                requestAnimationFrame(centerMap);
+            }
+        });
+
+        function loadSavedTokens() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                state.palette = Array.isArray(saved.palette) ? saved.palette : [];
+                state.boardTokens = Array.isArray(saved.boardTokens) ? saved.boardTokens : [];
+                state.boardTokens.forEach(token => {
+                    if (token.templateId) return;
+                    const template = state.palette.find(item => item.name === token.name && item.color === token.color && item.size === token.size);
+                    if (template) token.templateId = template.id;
+                });
+                state.savedMaps = Array.isArray(saved.savedMaps) ? saved.savedMaps : [];
+                state.music = youtubeMusic.setSettings(saved.music, { emit: false });
+                if (saved.map && typeof saved.map === 'object') {
                     state.map.cols = Math.max(5, Math.min(200, parseInt(saved.map.cols, 10) || state.map.cols));
                     state.map.rows = Math.max(5, Math.min(200, parseInt(saved.map.rows, 10) || state.map.rows));
                     state.map.cellSize = Math.max(5, Math.min(100, parseInt(saved.map.cellSize, 10) || state.map.cellSize));
