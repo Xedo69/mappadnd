@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/jpeg" href="https://i.pinimg.com/736x/0a/ee/a0/0aeea062d5a14faf9921e96d3658ff60.jpg">
     <title>Mappa Tattica D&D</title>
+    <script>
+        (() => {
+            const params = new URLSearchParams(window.location.search);
+            let entry = params.get('entry');
+            try { entry ||= sessionStorage.getItem('dnd-cloud-login-approved'); } catch (error) {}
+            if (entry !== 'account' && entry !== 'demo') window.location.replace('./login.html');
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -21,7 +29,24 @@
             user-select: none;
         }
 
-        body.auth-checking { visibility: hidden; }
+        body.auth-checking { visibility: visible; }
+        #auth-loading {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0f172a;
+            color: #cbd5e1;
+            font: 500 14px Inter, sans-serif;
+        }
+        body:not(.auth-checking) #auth-loading { display: none; }
+        body.player-mode #map-controls > section:not(:first-child),
+        body.player-mode #map-controls > youtube-music,
+        body.player-mode #map-controls > div:last-child { display: none !important; }
+        body.player-mode #map-controls { gap: 1rem; }
+        body.player-mode #map-sidebar-header h1::after { content: ' · Player'; color: #6ee7b7; font-size: .7rem; }
 
         /* Use the visible mobile viewport when browser chrome expands or collapses. */
         @supports (height: 100dvh) {
@@ -303,6 +328,7 @@
     </style>
 </head>
 <body class="auth-checking flex h-screen w-screen bg-slate-950 font-sans">
+    <div id="auth-loading" role="status" aria-live="polite">Verifico l’accesso…</div>
 
     <!-- Barra Laterale -->
     <aside id="map-sidebar" class="w-80 bg-slate-900 border-r border-slate-700 flex flex-col shadow-2xl z-20 shrink-0">
@@ -321,10 +347,11 @@
         <div id="map-controls" class="flex-1 min-h-0 overflow-y-auto p-3.5 space-y-4">
 
             <section class="bg-slate-800/90 p-3 rounded-lg border border-slate-700 text-xs">
-                <details id="cloud-sync-details" open>
+                <details id="cloud-sync-details">
                     <summary class="flex items-center justify-between gap-3 cursor-pointer select-none font-semibold text-slate-300 uppercase tracking-wider hover:text-white">
                         <span class="flex min-w-0 items-center gap-2">
-                            <span class="truncate">Sincronizzazione cloud</span>
+                            <svg class="h-4 w-4 shrink-0 text-sky-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18.5 10a4 4 0 0 1-.5 8H7.5Z"/></svg>
+                            <span class="truncate">Cloud</span>
                             <span id="cloud-connection-status" role="status" aria-live="polite" class="inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-bold normal-case tracking-normal text-rose-300 bg-rose-950/70 border-rose-900">
                                 <span class="h-1.5 w-1.5 rounded-full bg-rose-400" aria-hidden="true"></span>
                                 Offline
@@ -350,6 +377,7 @@
                         <span id="cloud-account-email" class="text-slate-300 truncate"></span>
                         <button id="cloud-sign-out" type="button" class="text-rose-300 hover:text-rose-200 border border-rose-900 rounded px-2 py-1 shrink-0">Esci</button>
                     </div>
+                    <button id="cloud-change-role" type="button" class="mt-2 w-full rounded-lg border border-indigo-500/35 bg-indigo-950/40 px-3 py-2 text-left font-semibold text-indigo-200 transition hover:border-indigo-400/60 hover:bg-indigo-900/50">↩ Torna alla scelta Master / Player</button>
                     <div class="grid grid-cols-2 gap-2 mt-2">
                         <button id="cloud-export-data" type="button" class="bg-slate-700 hover:bg-slate-600 text-slate-200 py-1.5 rounded">Esporta backup</button>
                         <label class="bg-slate-700 hover:bg-slate-600 text-slate-200 py-1.5 rounded text-center cursor-pointer">Importa backup<input id="cloud-import-data" type="file" accept="application/json,.json" class="hidden"></label>
@@ -475,7 +503,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js?v=mapfit1"></script>
     <script src="./youtube-music.js"></script>
-    <script src="./tokens.js?v=token-cache-20261017"></script>
+    <script src="./tokens.js?v=token-init-20261017"></script>
     <script>
         const state = {
             map: { cols: 20, rows: 15, widthPx: 800, heightPx: 600, bg: '#334155', showGrid: true, cellSize: 40, snapToGrid: true, autoFitImage: true },
@@ -500,6 +528,11 @@
         let cloudSaveTimer = null;
         let lastCloudStateJson = null;
         let applyingCloudState = false;
+        const pageParams = new URLSearchParams(window.location.search);
+        let storedRole = null;
+        try { storedRole = sessionStorage.getItem('dnd-map-role'); } catch (error) {}
+        const playerMode = pageParams.get('mode') === 'player' || pageParams.get('role') === 'player' || storedRole === 'player';
+        const playerDeletedTokenIds = new Set();
 
         const viewport = document.getElementById('map-viewport');
         const wrapper = document.getElementById('map-wrapper');
@@ -524,7 +557,9 @@
             colorWithOpacity,
             renderBoardTokens: () => renderBoardTokens(),
             saveTokens: () => saveTokens(),
-            showToast: message => showToast(message)
+            showToast: message => showToast(message),
+            isPlayerMode: () => playerMode,
+            markPlayerTokenDeleted: id => playerDeletedTokenIds.add(id)
         });
 
         function cellSize() { return state.map.cellSize; }
@@ -536,10 +571,10 @@
         }
 
         async function authorizeMapEntry() {
-            const approvedEntry = sessionStorage.getItem(LOGIN_GATE_KEY);
+            let approvedEntry = new URLSearchParams(window.location.search).get('entry');
+            try { approvedEntry ||= sessionStorage.getItem(LOGIN_GATE_KEY); } catch (error) {}
 
             if (approvedEntry === 'demo') {
-                if (cloudClient) await cloudClient.auth.signOut({ scope: 'local' }).catch(() => {});
                 return 'demo';
             }
 
@@ -550,11 +585,15 @@
             }
 
             try {
-                const { data, error } = await cloudClient.auth.getSession();
+                const sessionResult = await Promise.race([
+                    cloudClient.auth.getSession(),
+                    new Promise((_, reject) => window.setTimeout(() => reject(new Error('Verifica sessione scaduta')), 8000))
+                ]);
+                const { data, error } = sessionResult;
                 if (error || !data.session) throw error || new Error('Sessione non valida');
-                return 'account';
+                return playerMode ? 'player' : 'account';
             } catch (error) {
-                sessionStorage.removeItem(LOGIN_GATE_KEY);
+                try { sessionStorage.removeItem(LOGIN_GATE_KEY); } catch (storageError) {}
                 await cloudClient.auth.signOut({ scope: 'local' }).catch(() => {});
                 window.location.replace('./login.html');
                 return false;
@@ -564,6 +603,8 @@
         async function init() {
             const entryMode = await authorizeMapEntry();
             if (!entryMode) return;
+            document.body.classList.toggle('player-mode', entryMode === 'player');
+            tokenManager.setPlayerMode?.(entryMode === 'player');
             document.body.classList.remove('auth-checking');
             renderPalette();
             renderBoardTokens();
@@ -641,6 +682,12 @@
                 state.savedMaps = [];
                 console.warn('Impossibile recuperare le pedine salvate:', error);
             }
+        }
+
+        function isAdventurerToken(token, palette = state.palette) {
+            if (token.category) return token.category !== 'nemici';
+            const template = palette.find(item => item.id === token.templateId);
+            return !template || template.category !== 'nemici';
         }
 
         function getPersistedState() {
@@ -791,7 +838,19 @@
 
         async function saveStateToCloud() {
             if (!cloudUser || !cloudClient || applyingCloudState) return;
-            const saved = getPersistedState();
+            let saved = getPersistedState();
+            if (playerMode) {
+                const { data, error: fetchError } = await cloudClient.from('map_states').select('state').eq('user_id', cloudUser.id).maybeSingle();
+                if (fetchError) { setCloudStatus('Impossibile aggiornare gli avventurieri online.', true); return; }
+                const latest = data?.state || saved;
+                const remoteAdventurers = (latest.boardTokens || []).filter(token => isAdventurerToken(token, latest.palette || []));
+                const localAdventurers = saved.boardTokens.filter(token => isAdventurerToken(token));
+                const mergedById = new Map(remoteAdventurers.map(token => [token.id, token]));
+                localAdventurers.forEach(token => mergedById.set(token.id, token));
+                const removedIds = new Set(playerDeletedTokenIds);
+                saved = { ...latest, palette: [...(latest.palette || []).filter(item => item.category === 'nemici'), ...saved.palette.filter(item => item.category !== 'nemici')], boardTokens: [...(latest.boardTokens || []).filter(token => !isAdventurerToken(token, latest.palette || [])), ...[...mergedById.values()].filter(token => !removedIds.has(token.id))] };
+                playerDeletedTokenIds.clear();
+            }
             const serialized = JSON.stringify(saved);
             if (serialized === lastCloudStateJson) return;
             const { error } = await cloudClient.from('map_states').upsert({
@@ -837,7 +896,7 @@
                 returnToLoginButton.classList.remove('hidden');
                 returnToLoginButton.addEventListener('click', async () => {
                     if (cloudClient) await cloudClient.auth.signOut({ scope: 'local' }).catch(() => {});
-                    sessionStorage.removeItem(LOGIN_GATE_KEY);
+                    try { sessionStorage.removeItem(LOGIN_GATE_KEY); } catch (storageError) {}
                     window.location.replace('./login.html');
                 });
                 setCloudConnectionStatus(false);
@@ -887,9 +946,13 @@
                 const { error } = await cloudClient.auth.signOut({ scope: 'local' });
                 if (error) setCloudStatus(error.message, true);
                 else {
-                    sessionStorage.removeItem(LOGIN_GATE_KEY);
+                    try { sessionStorage.removeItem(LOGIN_GATE_KEY); } catch (storageError) {}
                     window.location.replace('./login.html');
                 }
+            });
+
+            document.getElementById('cloud-change-role').addEventListener('click', () => {
+                window.location.replace('./login.html?choose-role=1');
             });
 
             document.getElementById('cloud-export-data').addEventListener('click', exportMapBackup);
