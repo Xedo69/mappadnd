@@ -7,6 +7,10 @@
     <style>html,body,iframe{width:100%;height:100%;margin:0;border:0;background:#020617;display:block}</style>
 </head>
 <body>
-    <iframe title="Mappa giocatore" src="./index.html?mode=player"></iframe>
+    <iframe id="player-map" title="Mappa giocatore"></iframe>
+    <script>
+        const entry = new URLSearchParams(window.location.search).get('entry') || 'account';
+        document.getElementById('player-map').src = `./index.html?mode=player&role=player&entry=${encodeURIComponent(entry)}`;
+    </script>
 </body>
 </html>
