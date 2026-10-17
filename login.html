@@ -113,15 +113,9 @@
         }
 
         function enterMap(mode = 'account', role = 'master') {
-            try {
-                sessionStorage.setItem(LOGIN_GATE_KEY, mode);
-                sessionStorage.setItem('dnd-map-role', role);
-            } catch (error) {
-                // The URL carries the entry mode when local-file storage is unavailable.
-            }
-            const params = new URLSearchParams({ entry: mode, role });
-            const target = mode === 'demo' || role === 'master' ? './index.html' : './player.html';
-            window.location.replace(`${target}?${params.toString()}`);
+            sessionStorage.setItem(LOGIN_GATE_KEY, mode);
+            sessionStorage.setItem('dnd-map-role', role);
+            window.location.replace(mode === 'demo' ? './index.html' : (role === 'player' ? './player.html' : './index.html'));
         }
 
         document.getElementById('enter-master').addEventListener('click', () => enterMap('account', 'master'));
@@ -129,6 +123,7 @@
 
         demoButton.addEventListener('click', async () => {
             setBusy(true);
+            if (cloudClient) await cloudClient.auth.signOut({ scope: 'local' }).catch(() => {});
             enterMap('demo');
         });
 
@@ -144,14 +139,6 @@
             cloudClient.auth.onAuthStateChange((event, session) => {
                 if (event === 'SIGNED_IN' && session && confirmationLink) chooseRole();
             });
-
-            if (new URLSearchParams(window.location.search).get('choose-role') === '1') {
-                cloudClient.auth.getSession().then(({ data, error }) => {
-                    if (error) throw error;
-                    if (data.session) chooseRole();
-                    else showStatus('La sessione è scaduta. Accedi di nuovo per scegliere il ruolo.');
-                }).catch(error => showStatus(error.message || 'Impossibile verificare la sessione cloud.'));
-            }
 
             form.addEventListener('submit', async event => {
                 event.preventDefault();
