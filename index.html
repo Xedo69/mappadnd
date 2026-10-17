@@ -139,7 +139,7 @@
                 transform: translateX(-102%);
                 pointer-events: none;
             }
-            #map-controls > section { border-color: rgba(71, 85, 105, 0.72); }
+            #map-controls > section, #map-controls > token-manager > section { border-color: rgba(71, 85, 105, 0.72); }
             aside button, aside input:not([type="checkbox"]):not([type="range"]):not([type="color"]), aside select {
                 min-height: 44px;
             }
@@ -205,7 +205,12 @@
         }
         #map-sidebar-header h1 { letter-spacing: -0.025em; }
         #map-controls { padding: 1rem; gap: 1rem; }
-        #map-controls > section {
+        #map-controls > token-manager {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        #map-controls > section, #map-controls > token-manager > section {
             border: 1px solid rgba(100, 116, 139, 0.3);
             border-radius: 1rem;
             background: linear-gradient(145deg, rgba(30, 41, 59, 0.78), rgba(15, 23, 42, 0.82));
@@ -213,6 +218,7 @@
             padding: 1rem;
         }
         #map-controls > section h2,
+        #map-controls > token-manager > section h2,
         #map-controls > section > details > summary { letter-spacing: 0.09em; }
         #map-controls details:not(#cloud-sync-details) {
             border-color: rgba(100, 116, 139, 0.32);
@@ -423,41 +429,7 @@
                 </div>
             </section>
 
-            <!-- Crea Pedina -->
-            <section class="bg-slate-800/90 p-3 rounded-lg border border-slate-700 text-xs">
-                <button id="btn-open-token-create" type="button" aria-haspopup="dialog" class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-400/30 bg-gradient-to-r from-emerald-600 to-teal-600 px-3 py-2.5 text-xs font-semibold text-white shadow-lg shadow-emerald-950/30 transition hover:-translate-y-0.5 hover:from-emerald-500 hover:to-teal-500 focus:outline-none focus:ring-2 focus:ring-emerald-300">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-                    <span>Crea personaggio</span>
-                </button>
-            </section>
-
-            <!-- Palette Pedine -->
-            <section class="text-xs">
-                <div class="flex justify-between items-center mb-2">
-                    <h2 class="font-semibold text-slate-300 uppercase tracking-wider">Pedine</h2>
-                    <span class="text-[10px] text-slate-400">Trascina sulla mappa</span>
-                </div>
-                <div class="space-y-2">
-                    <details class="rounded-md border border-slate-700 bg-slate-900/60">
-                        <summary class="flex cursor-pointer select-none items-center justify-between px-2.5 py-2 font-semibold text-slate-300 hover:text-white">
-                            <span>Avventurieri</span>
-                            <span id="adventurer-token-count" class="text-[10px] text-slate-500">0</span>
-                        </summary>
-                        <div id="token-palette-adventurers" class="flex max-h-48 flex-col gap-1.5 overflow-y-auto px-2 pb-2 pr-3">
-                            <p class="empty-category-msg py-2 text-center italic text-slate-500">Nessun avventuriero</p>
-                        </div>
-                    </details>
-                    <details class="rounded-md border border-slate-700 bg-slate-900/60">
-                        <summary class="flex cursor-pointer select-none items-center justify-between px-2.5 py-2 font-semibold text-slate-300 hover:text-white">
-                            <span>Nemici</span>
-                            <span id="enemy-token-count" class="text-[10px] text-slate-500">0</span>
-                        </summary>
-                        <div id="token-palette-enemies" class="flex max-h-48 flex-col gap-1.5 overflow-y-auto px-2 pb-2 pr-3">
-                            <p class="empty-category-msg py-2 text-center italic text-slate-500">Nessun nemico</p>
-                        </div>
-                    </details>
-                </div>
-            </section>
+            <token-manager id="token-manager" class="block w-full"></token-manager>
 
             <!-- Musica & Atmosfera YouTube -->
             <youtube-music id="youtube-music" class="block w-full"></youtube-music>
@@ -470,67 +442,6 @@
             </div>
         </div>
     </aside>
-
-    <div id="token-create-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm" role="presentation">
-        <section role="dialog" aria-modal="true" aria-labelledby="token-create-title" class="w-full max-w-xl overflow-hidden rounded-3xl border border-emerald-400/20 bg-slate-900 shadow-2xl shadow-black/60">
-            <header class="relative flex items-center justify-between gap-4 overflow-hidden border-b border-white/10 bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-900 px-6 py-5 sm:px-7">
-                <div class="pointer-events-none absolute -right-10 -top-16 h-40 w-40 rounded-full bg-emerald-500/10 blur-3xl"></div>
-                <div class="relative flex min-w-0 items-center gap-4">
-                    <span class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-emerald-300/20 bg-emerald-400/10 shadow-inner shadow-emerald-200/5">
-                        <img src="https://i.pinimg.com/736x/8a/ee/3c/8aee3cf9eb3649b4d50c8c900b45c0de.jpg" alt="" aria-hidden="true" class="h-full w-full object-cover">
-                    </span>
-                    <div class="min-w-0">
-                        <span class="mb-1 block text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300/80">Nuovo elemento</span>
-                        <h2 id="token-create-title" class="text-lg font-bold text-white">Crea personaggio</h2>
-                        <p class="mt-1 text-xs text-slate-400">Personalizza aspetto e categoria della pedina.</p>
-                    </div>
-                </div>
-                <button id="btn-close-token-create" type="button" aria-label="Chiudi creazione personaggio" class="relative shrink-0 rounded-xl border border-white/10 bg-white/5 p-2.5 text-slate-300 transition hover:border-white/20 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400">
-                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M4.22 4.22a.75.75 0 0 1 1.06 0L10 8.94l4.72-4.72a.75.75 0 1 1 1.06 1.06L11.06 10l4.72 4.72a.75.75 0 1 1-1.06 1.06L10 11.06l-4.72 4.72a.75.75 0 1 1-1.06-1.06L8.94 10 4.22 5.28a.75.75 0 0 1 0-1.06Z"/></svg>
-                </button>
-            </header>
-            <div class="max-h-[75vh] space-y-5 overflow-y-auto bg-gradient-to-b from-slate-900 to-slate-950 p-6 text-xs sm:p-7">
-                    <div class="space-y-2">
-                        <label for="token-name" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300">Nome del personaggio</label>
-                        <input type="text" id="token-name" placeholder="es. Paladino, Drago, Scheletro..." class="w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-white placeholder:text-slate-600 transition focus:border-emerald-400/70 focus:outline-none focus:ring-2 focus:ring-emerald-400/15">
-                    </div>
-                    <div class="space-y-2">
-                        <label for="token-category" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300">Dove inserirlo</label>
-                        <select id="token-category" class="w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-white transition focus:border-emerald-400/70 focus:outline-none focus:ring-2 focus:ring-emerald-400/15">
-                            <option value="avventurieri">🛡️ Avventurieri</option>
-                            <option value="nemici">👹 Nemici</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-[5rem_1fr] gap-3">
-                        <div class="space-y-2">
-                            <label for="token-color" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300">Colore</label>
-                            <input type="color" id="token-color" value="#dc2626" class="h-12 w-full cursor-pointer rounded-xl border border-slate-700 bg-slate-950 p-1.5">
-                        </div>
-                        <div class="space-y-2">
-                            <label for="token-size" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300">Dimensione sulla griglia</label>
-                            <select id="token-size" class="h-12 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 text-sm text-white transition focus:border-emerald-400/70 focus:outline-none focus:ring-2 focus:ring-emerald-400/15">
-                                <option value="1">Media (1x1)</option>
-                                <option value="2">Grande (2x2)</option>
-                                <option value="3">Enorme (3x3)</option>
-                                <option value="4">Mastodontica (4x4)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="space-y-2">
-                        <label for="token-image" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-300">Ritratto <span class="font-normal normal-case tracking-normal text-slate-500">facoltativo</span></label>
-                        <div class="flex items-center gap-3 rounded-xl border border-dashed border-slate-700 bg-slate-950/50 p-3 transition hover:border-emerald-400/40">
-                            <input type="file" id="token-image" accept="image/*" class="min-w-0 flex-1 text-[11px] text-slate-400 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-2 file:text-xs file:font-medium file:text-slate-200 hover:file:bg-slate-700">
-                            <img id="token-image-preview" class="hidden h-12 w-12 rounded-xl border border-emerald-300/30 object-cover shadow-lg" alt="Anteprima immagine pedina">
-                        </div>
-                        <p class="text-[10px] text-slate-500">Puoi aggiungere o cambiare il ritratto anche più avanti.</p>
-                    </div>
-                    <button id="btn-create-token" type="button" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-950/40 transition hover:-translate-y-0.5 hover:from-emerald-400 hover:to-teal-400 focus:outline-none focus:ring-2 focus:ring-emerald-300">
-                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-                        Aggiungi alla palette
-                    </button>
-            </div>
-        </section>
-    </div>
 
     <!-- Area Mappa -->
     <main class="flex-1 relative bg-slate-950 overflow-hidden" id="map-viewport">
@@ -550,60 +461,6 @@
         </div>
     </main>
 
-    <!-- Modal Modifica Pedina -->
-    <div id="edit-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-slate-700 rounded-xl max-w-sm w-full p-4 shadow-2xl text-xs">
-            <h3 class="text-sm font-bold text-white mb-3">Modifica Pedina</h3>
-            <div class="space-y-3 mb-4">
-                <div>
-                    <label class="block text-slate-400 mb-1">Nome</label>
-                    <input type="text" id="edit-token-name" class="w-full bg-slate-900 border border-slate-600 rounded px-2.5 py-1.5 text-white focus:outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label for="edit-token-category" class="block text-slate-400 mb-1">Categoria</label>
-                    <select id="edit-token-category" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-white focus:outline-none focus:border-indigo-500">
-                        <option value="avventurieri">Avventurieri</option>
-                        <option value="nemici">Nemici</option>
-                    </select>
-                </div>
-                <div class="flex gap-2">
-                    <div class="w-16">
-                        <label class="block text-slate-400 mb-1">Colore</label>
-                        <input type="color" id="edit-token-color" class="w-full h-8 bg-slate-900 border border-slate-600 rounded cursor-pointer p-0.5">
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-slate-400 mb-1">Taglia (Quadretti)</label>
-                        <select id="edit-token-size" class="w-full h-8 bg-slate-900 border border-slate-600 rounded px-2 text-white focus:outline-none focus:border-indigo-500">
-                            <option value="1">Media (1x1)</option>
-                            <option value="2">Grande (2x2)</option>
-                            <option value="3">Enorme (3x3)</option>
-                            <option value="4">Mastodontica (4x4)</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <div class="flex items-center justify-between mb-1">
-                        <label for="edit-token-opacity" class="text-slate-400">Opacità colore</label>
-                        <span id="edit-token-opacity-value" class="text-slate-300">100%</span>
-                    </div>
-                    <input type="range" id="edit-token-opacity" min="0" max="100" value="100" class="w-full accent-indigo-500">
-                </div>
-                <div>
-                    <label for="edit-token-image" class="block text-slate-400 mb-1">Immagine pedina</label>
-                    <div class="flex items-center gap-2">
-                        <input type="file" id="edit-token-image" accept="image/*" class="min-w-0 flex-1 text-[10px] text-slate-300 file:mr-2 file:rounded file:border-0 file:bg-slate-700 file:px-2 file:py-1 file:text-slate-200">
-                        <img id="edit-token-image-preview" class="hidden w-9 h-9 rounded-full border border-white/50 object-cover" alt="Anteprima immagine pedina">
-                        <button id="btn-clear-edit-image" type="button" class="text-slate-400 hover:text-rose-300">Rimuovi</button>
-                    </div>
-                </div>
-            </div>
-            <div class="flex justify-end gap-2">
-                <button id="btn-modal-cancel" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded font-medium transition">Annulla</button>
-                <button id="btn-modal-save" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded font-medium transition">Salva Modifiche</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-700 text-slate-200 text-xs px-3 py-2 rounded-lg shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none z-50"></div>
 
@@ -618,6 +475,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js?v=mapfit1"></script>
     <script src="./youtube-music.js"></script>
+    <script src="./tokens.js"></script>
     <script>
         const state = {
             map: { cols: 20, rows: 15, widthPx: 800, heightPx: 600, bg: '#334155', showGrid: true, cellSize: 40, snapToGrid: true, autoFitImage: true },
@@ -629,6 +487,7 @@
         };
         const youtubeMusic = document.getElementById('youtube-music');
         state.music = youtubeMusic.getSettings();
+        const tokenManager = document.getElementById('token-manager');
         const STORAGE_KEY = 'dnd-tactical-map-tokens-v1';
         const LOGIN_GATE_KEY = 'dnd-cloud-login-approved';
         const cloudConfig = window.MAP_CLOUD_CONFIG || {};
@@ -645,28 +504,6 @@
         const viewport = document.getElementById('map-viewport');
         const wrapper = document.getElementById('map-wrapper');
         const mapContainer = document.getElementById('map-container');
-        const paletteContainers = {
-            avventurieri: document.getElementById('token-palette-adventurers'),
-            nemici: document.getElementById('token-palette-enemies')
-        };
-        Object.entries(paletteContainers).forEach(([category, container]) => {
-            container.addEventListener('dragover', (e) => {
-                if (!Array.from(e.dataTransfer.types).includes('application/x-mappadnd-palette-token')) return;
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-            });
-            container.addEventListener('drop', (e) => {
-                const templateId = e.dataTransfer.getData('application/x-mappadnd-palette-token');
-                if (!templateId) return;
-                e.preventDefault();
-                e.stopPropagation();
-                const template = state.palette.find(item => item.id === templateId);
-                if (!template || (template.category === 'nemici' ? 'nemici' : 'avventurieri') === category) return;
-                template.category = category;
-                renderPalette();
-                showToast(`"${template.name}" spostata in ${category === 'nemici' ? 'Nemici' : 'Avventurieri'}.`);
-            });
-        });
         const zoomLevelText = document.getElementById('zoom-level');
         const toggleGridCheckbox = document.getElementById('toggle-grid');
         const cellSizeInput = document.getElementById('cell-size');
@@ -677,6 +514,18 @@
         const editToggleButton = document.getElementById('btn-toggle-edit');
         const editToggleLabel = document.getElementById('edit-toggle-label');
         const openMenuButton = document.getElementById('btn-open-menu');
+
+        tokenManager.configure({
+            state,
+            viewport,
+            wrapper,
+            mapContainer,
+            cellSize: () => cellSize(),
+            colorWithOpacity,
+            renderBoardTokens: () => renderBoardTokens(),
+            saveTokens: () => saveTokens(),
+            showToast: message => showToast(message)
+        });
 
         function cellSize() { return state.map.cellSize; }
         function mapWidth() { return state.map.widthPx || state.map.cols * cellSize(); }
@@ -1420,34 +1269,6 @@
             });
         }
 
-        // --- Creazione & Palette Pedine ---
-        let pendingTokenImage = null;
-        let pendingEditImage = null;
-        let editImageChanged = false;
-
-        async function makeTokenThumbnail(file) {
-            if (!file || !file.type.startsWith('image/')) throw new Error('Seleziona un file immagine valido.');
-            const source = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = () => reject(new Error('Impossibile leggere il file immagine.'));
-                reader.readAsDataURL(file);
-            });
-            const image = await new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => resolve(img);
-                img.onerror = () => reject(new Error('Impossibile aprire il file immagine.'));
-                img.src = source;
-            });
-            const maxSide = 256;
-            const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
-            const canvas = document.createElement('canvas');
-            canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-            canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-            canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-            return canvas.toDataURL('image/webp', 0.8);
-        }
-
         function colorWithOpacity(hex, opacity = 100) {
             const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '#dc2626');
             if (!match) return hex || '#dc2626';
@@ -1455,460 +1276,9 @@
             return `rgba(${parseInt(match[1], 16)}, ${parseInt(match[2], 16)}, ${parseInt(match[3], 16)}, ${alpha})`;
         }
 
-        const tokenImageInput = document.getElementById('token-image');
-        const tokenImagePreview = document.getElementById('token-image-preview');
-        const tokenCreateModal = document.getElementById('token-create-modal');
-        const openTokenCreateButton = document.getElementById('btn-open-token-create');
-        function closeTokenCreateModal() {
-            tokenCreateModal.classList.add('hidden');
-            tokenCreateModal.classList.remove('flex');
-            openTokenCreateButton.focus();
-        }
-        openTokenCreateButton.addEventListener('click', () => {
-            tokenCreateModal.classList.remove('hidden');
-            tokenCreateModal.classList.add('flex');
-            document.getElementById('token-name').focus();
-        });
-        document.getElementById('btn-close-token-create').addEventListener('click', closeTokenCreateModal);
-        tokenCreateModal.addEventListener('click', event => {
-            if (event.target === tokenCreateModal) closeTokenCreateModal();
-        });
-        window.addEventListener('keydown', event => {
-            if (event.key === 'Escape' && !tokenCreateModal.classList.contains('hidden')) closeTokenCreateModal();
-        });
-        tokenImageInput.addEventListener('change', async () => {
-            const file = tokenImageInput.files[0];
-            if (!file) return;
-            try {
-                pendingTokenImage = await makeTokenThumbnail(file);
-                tokenImagePreview.src = pendingTokenImage;
-                tokenImagePreview.classList.remove('hidden');
-            } catch (error) {
-                pendingTokenImage = null;
-                tokenImagePreview.classList.add('hidden');
-                showToast(error.message);
-            }
-        });
-
-        document.getElementById('btn-create-token').addEventListener('click', () => {
-            const name = document.getElementById('token-name').value.trim() || 'Pedina';
-            const color = document.getElementById('token-color').value;
-            const size = parseInt(document.getElementById('token-size').value);
-            const category = document.getElementById('token-category').value;
-            
-            state.palette.push({
-                id: 'pal_' + Date.now() + Math.random().toString(16).slice(2),
-                name, color, size, category, opacity: 100, image: pendingTokenImage
-            });
-            document.getElementById('token-name').value = '';
-            pendingTokenImage = null;
-            tokenImageInput.value = '';
-            tokenImagePreview.removeAttribute('src');
-            tokenImagePreview.classList.add('hidden');
-            renderPalette();
-            closeTokenCreateModal();
-        });
-
-        function renderPalette() {
-            Object.values(paletteContainers).forEach(container => {
-                container.querySelectorAll('.palette-item').forEach(el => el.remove());
-                container.querySelector('.empty-category-msg').style.display = 'block';
-            });
-            document.getElementById('adventurer-token-count').textContent = state.palette.filter(template => (template.category || 'avventurieri') === 'avventurieri').length;
-            document.getElementById('enemy-token-count').textContent = state.palette.filter(template => template.category === 'nemici').length;
-
-            state.palette.forEach(template => {
-                const category = template.category === 'nemici' ? 'nemici' : 'avventurieri';
-                const targetPalette = paletteContainers[category];
-                targetPalette.querySelector('.empty-category-msg').style.display = 'none';
-                const el = document.createElement('div');
-                el.className = 'palette-item bg-slate-800/90 border border-slate-700 rounded-lg p-1.5 flex items-center gap-2 hover:bg-slate-700 transition select-none';
-                el.draggable = !window.matchMedia('(pointer: coarse)').matches;
-                
-                el.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', JSON.stringify(template));
-                    e.dataTransfer.setData('application/x-mappadnd-palette-token', template.id);
-                    e.dataTransfer.effectAllowed = 'copyMove';
-                });
-
-                el.addEventListener('click', (e) => {
-                    if (e.target.closest('button')) return;
-                    if (window.matchMedia('(pointer: coarse)').matches) placeTokenAtMapCenter(template);
-                });
-
-                const initials = template.name.substring(0, 2).toUpperCase();
-                el.innerHTML = `
-                    <div class="palette-avatar w-7 h-7 rounded-full border border-white/60 flex items-center justify-center text-[10px] font-bold shadow shrink-0">${initials}</div>
-                    <div class="flex-1 overflow-hidden">
-                        <p class="font-semibold text-white truncate text-xs">${template.name}</p>
-                        <p class="text-[10px] text-slate-400 leading-tight">${template.size}x${template.size} quadretti</p>
-                    </div>
-                    <button class="btn-toggle-token-visibility p-1 text-slate-400 hover:text-white" type="button"></button>
-                    <button class="btn-edit-pal p-1 text-slate-400 hover:text-white" title="Modifica pedina">✏️</button>
-                    <button class="btn-del-pal p-1 text-slate-400 hover:text-rose-400" title="Elimina dalla lista">🗑️</button>
-                `;
-
-                const avatar = el.querySelector('.palette-avatar');
-                avatar.style.backgroundColor = colorWithOpacity(template.color, template.opacity ?? 100);
-                if (template.image) {
-                    avatar.style.backgroundImage = `url("${template.image}")`;
-                    avatar.style.backgroundSize = 'cover';
-                    avatar.style.backgroundPosition = 'center';
-                    avatar.textContent = '';
-                }
-
-                const visibilityButton = el.querySelector('.btn-toggle-token-visibility');
-                const getLinkedTokens = () => state.boardTokens.filter(token =>
-                    token.templateId === template.id || (!token.templateId && token.name === template.name && token.color === template.color && token.size === template.size)
-                );
-                const updateVisibilityButton = () => {
-                    const linkedTokens = getLinkedTokens();
-                    const allHidden = linkedTokens.length > 0 && linkedTokens.every(token => token.hidden);
-                    visibilityButton.textContent = allHidden ? '🙈' : '👁️';
-                    visibilityButton.title = allHidden ? 'Mostra le pedine sulla mappa' : 'Nascondi le pedine sulla mappa';
-                    visibilityButton.setAttribute('aria-label', visibilityButton.title);
-                };
-                updateVisibilityButton();
-                visibilityButton.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const linkedTokens = getLinkedTokens();
-                    if (linkedTokens.length === 0) {
-                        showToast('Questa pedina non è ancora stata posizionata sulla mappa.');
-                        return;
-                    }
-                    const shouldHide = linkedTokens.some(token => !token.hidden);
-                    linkedTokens.forEach(token => { token.hidden = shouldHide; });
-                    renderBoardTokens();
-                    updateVisibilityButton();
-                });
-
-                el.querySelector('.btn-edit-pal').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    openEditModal('palette', template.id);
-                });
-
-                el.querySelector('.btn-del-pal').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const linkedTokens = state.boardTokens.filter(token =>
-                        token.templateId === template.id || (!token.templateId && token.name === template.name && token.color === template.color && token.size === template.size)
-                    ).length;
-                    const warning = linkedTokens
-                        ? ` Verranno eliminate anche ${linkedTokens} pedine già posizionate sulla mappa.`
-                        : '';
-                    if (!window.confirm(`Eliminare "${template.name}" dalla palette?${warning}`)) return;
-                    state.palette = state.palette.filter(p => p.id !== template.id);
-                    state.boardTokens = state.boardTokens.filter(token => {
-                        if (token.templateId) return token.templateId !== template.id;
-                        return token.name !== template.name || token.color !== template.color || token.size !== template.size;
-                    });
-                    renderPalette();
-                    renderBoardTokens();
-                });
-
-                targetPalette.appendChild(el);
-            });
-            saveTokens();
-        }
-
-        function placeTokenAtMapCenter(template) {
-            const x = Math.max(0, (state.map.cols - template.size) / 2);
-            const y = Math.max(0, (state.map.rows - template.size) / 2);
-            state.boardTokens.push({
-                id: 'tok_' + Date.now() + Math.random().toString(16).slice(2),
-                templateId: template.id,
-                name: template.name,
-                color: template.color,
-                opacity: template.opacity ?? 100,
-                image: template.image || null,
-                size: template.size,
-                x: state.map.snapToGrid ? Math.round(x) : x,
-                y: state.map.snapToGrid ? Math.round(y) : y
-            });
-            renderBoardTokens();
-            showToast(`${template.name} aggiunta al centro della mappa.`);
-        }
-
-        // --- Drag & Drop dalla Palette alla Mappa ---
-        viewport.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'copy';
-        });
-
-        viewport.addEventListener('drop', (e) => {
-            e.preventDefault();
-            const data = e.dataTransfer.getData('text/plain');
-            if (!data) return;
-
-            try {
-                const template = JSON.parse(data);
-                const rect = wrapper.getBoundingClientRect();
-                const mapX = ((e.clientX - rect.left) - state.view.panX) / state.view.scale;
-                const mapY = ((e.clientY - rect.top) - state.view.panY) / state.view.scale;
-
-                let gridX = mapX / cellSize() - (template.size / 2);
-                let gridY = mapY / cellSize() - (template.size / 2);
-                if (state.map.snapToGrid) {
-                    gridX = Math.round(gridX);
-                    gridY = Math.round(gridY);
-                }
-
-                gridX = Math.max(0, Math.min(gridX, state.map.cols - template.size));
-                gridY = Math.max(0, Math.min(gridY, state.map.rows - template.size));
-
-                state.boardTokens.push({
-                    id: 'tok_' + Date.now() + Math.random().toString(16).slice(2),
-                    templateId: template.id,
-                    name: template.name,
-                    color: template.color,
-                    opacity: template.opacity ?? 100,
-                    image: template.image || null,
-                    size: template.size,
-                    x: gridX,
-                    y: gridY
-                });
-
-                renderBoardTokens();
-            } catch (err) {
-                console.error("Errore nel piazzamento della pedina:", err);
-            }
-        });
-
-        // --- Pedine Sulla Mappa (Spostamento, Modifica, Cancellazione) ---
-        let draggedToken = null;
-        let tokenDragMoved = false;
-        let startClientX = 0, startClientY = 0;
-        let tokenInitX = 0, tokenInitY = 0;
-
-        function renderBoardTokens() {
-            mapContainer.querySelectorAll('.token').forEach(el => el.remove());
-
-            state.boardTokens.forEach(token => {
-                if (token.hidden) return;
-                const el = document.createElement('div');
-                el.className = 'token';
-                el.id = token.id;
-                
-                const pxSize = token.size * cellSize();
-                el.style.width = `${pxSize}px`;
-                el.style.height = `${pxSize}px`;
-                el.style.backgroundColor = colorWithOpacity(token.color, token.opacity ?? 100);
-                el.style.border = `3px solid ${colorWithOpacity(token.color, token.opacity ?? 100)}`;
-                if (token.image) {
-                    const portrait = document.createElement('img');
-                    portrait.src = token.image;
-                    portrait.alt = token.name;
-                    portrait.draggable = false;
-                    portrait.style.cssText = 'position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 6px);border-radius:50%;object-fit:cover;pointer-events:none;';
-                    el.appendChild(portrait);
-                }
-                el.style.left = `${token.x * cellSize()}px`;
-                el.style.top = `${token.y * cellSize()}px`;
-
-                const fontSize = Math.max(13, pxSize * 0.3);
-                el.style.fontSize = `${fontSize}px`;
-                if (!token.image) el.innerText = token.name.substring(0, 2).toUpperCase();
-                el.title = `${token.name} (${token.size}x${token.size}) - Doppio click per modificare`;
-
-                // Spostamento pedina
-                el.addEventListener('pointerdown', (e) => {
-                    if (e.button !== 0) return;
-                    e.stopPropagation();
-                    draggedToken = token;
-                    tokenDragMoved = false;
-                    startClientX = e.clientX;
-                    startClientY = e.clientY;
-                    tokenInitX = token.x * cellSize();
-                    tokenInitY = token.y * cellSize();
-                    el.style.zIndex = '50';
-                    el.setPointerCapture(e.pointerId);
-                });
-
-                // Doppio click per modificare nome/taglia
-                el.addEventListener('dblclick', (e) => {
-                    e.stopPropagation();
-                    openEditModal('board', token.id);
-                });
-
-                // Tasto destro per eliminare
-                el.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (!window.confirm(`Eliminare la pedina "${token.name}" dalla mappa?`)) return;
-                    state.boardTokens = state.boardTokens.filter(t => t.id !== token.id);
-                    renderBoardTokens();
-                });
-
-                mapContainer.appendChild(el);
-            });
-            saveTokens();
-        }
-
-        window.addEventListener('pointermove', (e) => {
-            if (!draggedToken) return;
-            const el = document.getElementById(draggedToken.id);
-            if (!el) return;
-
-            const deltaX = (e.clientX - startClientX) / state.view.scale;
-            const deltaY = (e.clientY - startClientY) / state.view.scale;
-            if (!tokenDragMoved && Math.hypot(e.clientX - startClientX, e.clientY - startClientY) < 4) return;
-            tokenDragMoved = true;
-
-            el.style.left = `${tokenInitX + deltaX}px`;
-            el.style.top = `${tokenInitY + deltaY}px`;
-        });
-
-        const finishTokenDrag = () => {
-            if (!draggedToken) return;
-            if (!tokenDragMoved) {
-                const el = document.getElementById(draggedToken.id);
-                if (el) el.style.zIndex = '10';
-                draggedToken = null;
-                return;
-            }
-            const el = document.getElementById(draggedToken.id);
-            if (el) {
-                const currLeft = parseFloat(el.style.left);
-                const currTop = parseFloat(el.style.top);
-
-                let targetX = currLeft / cellSize();
-                let targetY = currTop / cellSize();
-                if (state.map.snapToGrid) {
-                    targetX = Math.round(targetX);
-                    targetY = Math.round(targetY);
-                }
-
-                draggedToken.x = Math.max(0, Math.min(targetX, state.map.cols - draggedToken.size));
-                draggedToken.y = Math.max(0, Math.min(targetY, state.map.rows - draggedToken.size));
-            }
-            draggedToken = null;
-            tokenDragMoved = false;
-            renderBoardTokens();
-        };
-        window.addEventListener('pointerup', finishTokenDrag);
-        window.addEventListener('pointercancel', finishTokenDrag);
-
-        // --- Modale di Modifica (Nome / Taglia / Colore) ---
-        const editModal = document.getElementById('edit-modal');
-        const editNameInput = document.getElementById('edit-token-name');
-        const editColorInput = document.getElementById('edit-token-color');
-        const editCategoryInput = document.getElementById('edit-token-category');
-        const editSizeInput = document.getElementById('edit-token-size');
-        const editOpacityInput = document.getElementById('edit-token-opacity');
-        const editOpacityValue = document.getElementById('edit-token-opacity-value');
-        const editTokenImageInput = document.getElementById('edit-token-image');
-        const editTokenImagePreview = document.getElementById('edit-token-image-preview');
-        const clearEditImageButton = document.getElementById('btn-clear-edit-image');
-
-        editOpacityInput.addEventListener('input', () => {
-            editOpacityValue.textContent = `${editOpacityInput.value}%`;
-        });
-
-        function showEditImagePreview(image) {
-            if (image) {
-                editTokenImagePreview.src = image;
-                editTokenImagePreview.classList.remove('hidden');
-            } else {
-                editTokenImagePreview.removeAttribute('src');
-                editTokenImagePreview.classList.add('hidden');
-            }
-        }
-
-        editTokenImageInput.addEventListener('change', async () => {
-            const file = editTokenImageInput.files[0];
-            if (!file) return;
-            try {
-                pendingEditImage = await makeTokenThumbnail(file);
-                editImageChanged = true;
-                showEditImagePreview(pendingEditImage);
-            } catch (error) {
-                showToast(error.message);
-            }
-        });
-
-        clearEditImageButton.addEventListener('click', () => {
-            pendingEditImage = null;
-            editImageChanged = true;
-            editTokenImageInput.value = '';
-            showEditImagePreview(null);
-        });
-
-        function openEditModal(type, id) {
-            const item = (type === 'palette')
-                ? state.palette.find(p => p.id === id)
-                : state.boardTokens.find(b => b.id === id);
-
-            if (!item) return;
-
-            state.editing = { type, id };
-            editNameInput.value = item.name;
-            editColorInput.value = item.color;
-            editCategoryInput.value = item.category === 'nemici' ? 'nemici' : 'avventurieri';
-            editSizeInput.value = item.size;
-            editOpacityInput.value = item.opacity ?? 100;
-            editOpacityValue.textContent = `${editOpacityInput.value}%`;
-            pendingEditImage = item.image || null;
-            editImageChanged = false;
-            editTokenImageInput.value = '';
-            showEditImagePreview(pendingEditImage);
-
-            editModal.classList.remove('hidden');
-            editNameInput.focus();
-        }
-
-        function closeEditModal() {
-            editModal.classList.add('hidden');
-            state.editing = null;
-            pendingEditImage = null;
-            editImageChanged = false;
-        }
-
-        document.getElementById('btn-modal-cancel').addEventListener('click', closeEditModal);
-
-        document.getElementById('btn-modal-save').addEventListener('click', () => {
-            if (!state.editing) return;
-            const { type, id } = state.editing;
-
-            const newName = editNameInput.value.trim() || 'Pedina';
-            const newColor = editColorInput.value;
-            const newSize = parseInt(editSizeInput.value);
-            const newOpacity = parseInt(editOpacityInput.value);
-
-            if (type === 'palette') {
-                const item = state.palette.find(p => p.id === id);
-                if (item) {
-                    const previous = { name: item.name, color: item.color, size: item.size };
-                    const linkedTokens = state.boardTokens.filter(token =>
-                        token.templateId === item.id || (!token.templateId && token.name === previous.name && token.color === previous.color && token.size === previous.size)
-                    );
-                    item.name = newName;
-                    item.color = newColor;
-                    item.size = newSize;
-                    item.category = editCategoryInput.value;
-                    item.opacity = newOpacity;
-                    if (editImageChanged) item.image = pendingEditImage;
-                    linkedTokens.forEach(token => {
-                        token.color = newColor;
-                        token.opacity = newOpacity;
-                        if (editImageChanged) token.image = pendingEditImage;
-                    });
-                    renderPalette();
-                    renderBoardTokens();
-                }
-            } else {
-                const item = state.boardTokens.find(b => b.id === id);
-                if (item) {
-                    item.name = newName;
-                    item.color = newColor;
-                    item.size = newSize;
-                    item.opacity = newOpacity;
-                    if (editImageChanged) item.image = pendingEditImage;
-                    item.x = Math.max(0, Math.min(item.x, state.map.cols - newSize));
-                    item.y = Math.max(0, Math.min(item.y, state.map.rows - newSize));
-                    renderBoardTokens();
-                }
-            }
-            closeEditModal();
-        });
+        function renderBoardTokens() { tokenManager.renderBoardTokens(); }
+        function renderPalette() { tokenManager.renderPalette(); }
+        function openEditModal(type, id) { tokenManager.openEditModal(type, id); }
 
         // Player e controlli YouTube gestiti da youtube-music.js.
 
