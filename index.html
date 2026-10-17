@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/jpeg" href="https://i.pinimg.com/736x/0a/ee/a0/0aeea062d5a14faf9921e96d3658ff60.jpg">
     <title>Mappa Tattica D&D</title>
+    <script>
+        (() => {
+            const entry = sessionStorage.getItem('dnd-cloud-login-approved');
+            if (entry !== 'account' && entry !== 'demo') window.location.replace('./login.html');
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -326,10 +332,11 @@
         <div id="map-controls" class="flex-1 min-h-0 overflow-y-auto p-3.5 space-y-4">
 
             <section class="bg-slate-800/90 p-3 rounded-lg border border-slate-700 text-xs">
-                <details id="cloud-sync-details" open>
+                <details id="cloud-sync-details">
                     <summary class="flex items-center justify-between gap-3 cursor-pointer select-none font-semibold text-slate-300 uppercase tracking-wider hover:text-white">
                         <span class="flex min-w-0 items-center gap-2">
-                            <span class="truncate">Sincronizzazione cloud</span>
+                            <svg class="h-4 w-4 shrink-0 text-sky-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18.5 10a4 4 0 0 1-.5 8H7.5Z"/></svg>
+                            <span class="truncate">Cloud</span>
                             <span id="cloud-connection-status" role="status" aria-live="polite" class="inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-bold normal-case tracking-normal text-rose-300 bg-rose-950/70 border-rose-900">
                                 <span class="h-1.5 w-1.5 rounded-full bg-rose-400" aria-hidden="true"></span>
                                 Offline
@@ -355,6 +362,7 @@
                         <span id="cloud-account-email" class="text-slate-300 truncate"></span>
                         <button id="cloud-sign-out" type="button" class="text-rose-300 hover:text-rose-200 border border-rose-900 rounded px-2 py-1 shrink-0">Esci</button>
                     </div>
+                    <button id="cloud-change-role" type="button" class="mt-2 w-full rounded-lg border border-indigo-500/35 bg-indigo-950/40 px-3 py-2 text-left font-semibold text-indigo-200 transition hover:border-indigo-400/60 hover:bg-indigo-900/50">↩ Torna alla scelta Master / Player</button>
                     <div class="grid grid-cols-2 gap-2 mt-2">
                         <button id="cloud-export-data" type="button" class="bg-slate-700 hover:bg-slate-600 text-slate-200 py-1.5 rounded">Esporta backup</button>
                         <label class="bg-slate-700 hover:bg-slate-600 text-slate-200 py-1.5 rounded text-center cursor-pointer">Importa backup<input id="cloud-import-data" type="file" accept="application/json,.json" class="hidden"></label>
@@ -919,6 +927,10 @@
                     sessionStorage.removeItem(LOGIN_GATE_KEY);
                     window.location.replace('./login.html');
                 }
+            });
+
+            document.getElementById('cloud-change-role').addEventListener('click', () => {
+                window.location.replace('./login.html?choose-role=1');
             });
 
             document.getElementById('cloud-export-data').addEventListener('click', exportMapBackup);
