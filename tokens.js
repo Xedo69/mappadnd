@@ -23,11 +23,30 @@
             }
         }
 
+        setPlayerMode(enabled) {
+            this.playerMode = Boolean(enabled);
+            this.classList.toggle('player-token-mode', this.playerMode);
+            if (this.playerMode) {
+                document.getElementById('enemy-token-section').style.display = 'none';
+                document.getElementById('token-category').value = 'avventurieri';
+                document.getElementById('token-category').disabled = true;
+                document.getElementById('edit-token-category').value = 'avventurieri';
+                document.getElementById('edit-token-category').disabled = true;
+            }
+        }
+
+        isAdventurer(token) {
+            if (token.category) return token.category !== 'nemici';
+            const template = this.context?.state.palette.find(item => item.id === token.templateId);
+            return !template || template.category !== 'nemici';
+        }
+
         createBoardToken(template, x, y) {
             const state = this.context.state;
             state.boardTokens.push({
                 id: 'tok_' + Date.now() + Math.random().toString(16).slice(2),
                 templateId: template.id,
+                category: template.category === 'nemici' ? 'nemici' : 'avventurieri',
                 name: template.name,
                 color: template.color,
                 opacity: template.opacity ?? 100,
@@ -143,10 +162,12 @@
                 element.style.top = `${token.y * cellSize()}px`;
                 element.style.fontSize = `${Math.max(13, pixelSize * 0.3)}px`;
                 if (!token.image) element.innerText = token.name.substring(0, 2).toUpperCase();
-                element.title = `${token.name} (${token.size}x${token.size}) - Doppio click per modificare`;
+                element.title = this.playerMode && !this.isAdventurer(token) ? token.name : `${token.name} (${token.size}x${token.size}) - Doppio click per modificare`;
+                if (this.playerMode && !this.isAdventurer(token)) element.style.cursor = 'default';
                 element.addEventListener('pointerdown', event => {
-                    if (event.button !== 0) return;
+                    if (event.button !== 0 || (this.playerMode && !this.isAdventurer(token))) return;
                     event.stopPropagation();
+                    if (this.playerMode && !this.isAdventurer(token)) return;
                     this.draggedToken = token;
                     this.tokenDragMoved = false;
                     this.startClientX = event.clientX;
@@ -158,12 +179,15 @@
                 });
                 element.addEventListener('dblclick', event => {
                     event.stopPropagation();
+                    if (this.playerMode && !this.isAdventurer(token)) return;
                     this.openEditModal('board', token.id);
                 });
                 element.addEventListener('contextmenu', event => {
                     event.preventDefault();
                     event.stopPropagation();
+                    if (this.playerMode && !this.isAdventurer(token)) return;
                     if (!window.confirm(`Eliminare la pedina "${token.name}" dalla mappa?`)) return;
+                    this.context.markPlayerTokenDeleted?.(token.id);
                     state.boardTokens = state.boardTokens.filter(entry => entry.id !== token.id);
                     this.renderBoardTokens();
                 });
@@ -192,7 +216,7 @@
                             </summary>
                             <div id="token-palette-adventurers" class="flex max-h-48 flex-col gap-1.5 overflow-y-auto px-2 pb-2 pr-3"><p class="empty-category-msg py-2 text-center italic text-slate-500">Nessun avventuriero</p></div>
                         </details>
-                        <details class="rounded-md border border-slate-700 bg-slate-900/60">
+                        <details id="enemy-token-section" class="rounded-md border border-slate-700 bg-slate-900/60">
                             <summary class="flex cursor-pointer select-none items-center justify-between px-2.5 py-2 font-semibold text-slate-300 hover:text-white">
                                 <span>Nemici</span><span id="enemy-token-count" class="text-[10px] text-slate-500">0</span>
                             </summary>
@@ -283,7 +307,7 @@
                     name,
                     color: $('token-color').value,
                     size: parseInt($('token-size').value, 10),
-                    category: $('token-category').value,
+                    category: this.playerMode ? 'avventurieri' : $('token-category').value,
                     opacity: 100,
                     image: this.pendingTokenImage
                 });
@@ -309,6 +333,7 @@
                     event.preventDefault();
                     event.stopPropagation();
                     const template = this.context?.state.palette.find(item => item.id === templateId);
+                    if (this.playerMode && category === 'nemici') return;
                     if (!template || (template.category === 'nemici' ? 'nemici' : 'avventurieri') === category) return;
                     template.category = category;
                     this.renderPalette();
@@ -423,9 +448,11 @@
                 });
                 item.querySelector('.btn-del-pal').addEventListener('click', event => {
                     event.stopPropagation();
-                    const count = linkedTokens().length;
+                    const linked = linkedTokens();
+                    const count = linked.length;
                     const warning = count ? ` Verranno eliminate anche ${count} pedine già posizionate sulla mappa.` : '';
                     if (!window.confirm(`Eliminare "${template.name}" dalla palette?${warning}`)) return;
+                    if (this.playerMode) linked.forEach(token => this.context.markPlayerTokenDeleted?.(token.id));
                     state.palette = state.palette.filter(entry => entry.id !== template.id);
                     state.boardTokens = state.boardTokens.filter(token => token.templateId ? token.templateId !== template.id : token.name !== template.name || token.color !== template.color || token.size !== template.size);
                     this.renderPalette();
@@ -451,7 +478,7 @@
             const state = this.context?.state;
             if (!state) return;
             const item = type === 'palette' ? state.palette.find(entry => entry.id === id) : state.boardTokens.find(entry => entry.id === id);
-            if (!item) return;
+            if (!item || (this.playerMode && (type === 'palette' ? item.category === 'nemici' : !this.isAdventurer(item)))) return;
             state.editing = { type, id };
             document.getElementById('edit-token-name').value = item.name;
             document.getElementById('edit-token-color').value = item.color;
@@ -488,6 +515,7 @@
                 const item = state.palette.find(entry => entry.id === id);
                 if (item) {
                     const previous = { name: item.name, color: item.color, size: item.size };
+                    if (this.playerMode && item.category === 'nemici') return;
                     const linked = state.boardTokens.filter(token => token.templateId === item.id || (!token.templateId && token.name === previous.name && token.color === previous.color && token.size === previous.size));
                     Object.assign(item, { name, color, size, category: document.getElementById('edit-token-category').value, opacity });
                     if (this.editImageChanged) item.image = this.pendingEditImage;
