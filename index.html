@@ -22,6 +22,11 @@
         }
 
         body.auth-checking { visibility: hidden; }
+        body.player-mode #map-controls > section:not(:first-child),
+        body.player-mode #map-controls > youtube-music,
+        body.player-mode #map-controls > div:last-child { display: none !important; }
+        body.player-mode #map-controls { gap: 1rem; }
+        body.player-mode #map-sidebar-header h1::after { content: ' · Player'; color: #6ee7b7; font-size: .7rem; }
 
         /* Use the visible mobile viewport when browser chrome expands or collapses. */
         @supports (height: 100dvh) {
@@ -500,6 +505,8 @@
         let cloudSaveTimer = null;
         let lastCloudStateJson = null;
         let applyingCloudState = false;
+        const playerMode = new URLSearchParams(window.location.search).get('mode') === 'player' || sessionStorage.getItem('dnd-map-role') === 'player';
+        const playerDeletedTokenIds = new Set();
 
         const viewport = document.getElementById('map-viewport');
         const wrapper = document.getElementById('map-wrapper');
@@ -524,7 +531,9 @@
             colorWithOpacity,
             renderBoardTokens: () => renderBoardTokens(),
             saveTokens: () => saveTokens(),
-            showToast: message => showToast(message)
+            showToast: message => showToast(message),
+            isPlayerMode: () => playerMode,
+            markPlayerTokenDeleted: id => playerDeletedTokenIds.add(id)
         });
 
         function cellSize() { return state.map.cellSize; }
@@ -552,7 +561,7 @@
             try {
                 const { data, error } = await cloudClient.auth.getSession();
                 if (error || !data.session) throw error || new Error('Sessione non valida');
-                return 'account';
+                return playerMode ? 'player' : 'account';
             } catch (error) {
                 sessionStorage.removeItem(LOGIN_GATE_KEY);
                 await cloudClient.auth.signOut({ scope: 'local' }).catch(() => {});
@@ -564,6 +573,8 @@
         async function init() {
             const entryMode = await authorizeMapEntry();
             if (!entryMode) return;
+            document.body.classList.toggle('player-mode', entryMode === 'player');
+            tokenManager.setPlayerMode?.(entryMode === 'player');
             document.body.classList.remove('auth-checking');
             renderPalette();
             renderBoardTokens();
@@ -641,6 +652,12 @@
                 state.savedMaps = [];
                 console.warn('Impossibile recuperare le pedine salvate:', error);
             }
+        }
+
+        function isAdventurerToken(token, palette = state.palette) {
+            if (token.category) return token.category !== 'nemici';
+            const template = palette.find(item => item.id === token.templateId);
+            return !template || template.category !== 'nemici';
         }
 
         function getPersistedState() {
@@ -791,7 +808,19 @@
 
         async function saveStateToCloud() {
             if (!cloudUser || !cloudClient || applyingCloudState) return;
-            const saved = getPersistedState();
+            let saved = getPersistedState();
+            if (playerMode) {
+                const { data, error: fetchError } = await cloudClient.from('map_states').select('state').eq('user_id', cloudUser.id).maybeSingle();
+                if (fetchError) { setCloudStatus('Impossibile aggiornare gli avventurieri online.', true); return; }
+                const latest = data?.state || saved;
+                const remoteAdventurers = (latest.boardTokens || []).filter(token => isAdventurerToken(token, latest.palette || []));
+                const localAdventurers = saved.boardTokens.filter(token => isAdventurerToken(token));
+                const mergedById = new Map(remoteAdventurers.map(token => [token.id, token]));
+                localAdventurers.forEach(token => mergedById.set(token.id, token));
+                const removedIds = new Set(playerDeletedTokenIds);
+                saved = { ...latest, palette: [...(latest.palette || []).filter(item => item.category === 'nemici'), ...saved.palette.filter(item => item.category !== 'nemici')], boardTokens: [...(latest.boardTokens || []).filter(token => !isAdventurerToken(token, latest.palette || [])), ...[...mergedById.values()].filter(token => !removedIds.has(token.id))] };
+                playerDeletedTokenIds.clear();
+            }
             const serialized = JSON.stringify(saved);
             if (serialized === lastCloudStateJson) return;
             const { error } = await cloudClient.from('map_states').upsert({
