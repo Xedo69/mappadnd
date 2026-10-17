@@ -1,5 +1,5 @@
-Warning: truncated output (original token count: 19035)
-Total output lines: 1398
+Warning: truncated output (original token count: 19480)
+Total output lines: 1424
 
 <!DOCTYPE html>
 <html lang="it">
@@ -332,6 +332,32 @@ Total output lines: 1398
 </head>
 <body class="auth-checking flex h-screen w-screen bg-slate-950 font-sans">
     <div id="auth-loading" role="status" aria-live="polite">Verifico l’accesso…</div>
+    <script>
+        (() => {
+            const showStartupError = error => {
+                if (!document.body.classList.contains('auth-checking')) return;
+                document.body.classList.remove('auth-checking');
+                const loading = document.getElementById('auth-loading');
+                if (!loading) return;
+                const detail = error?.message || String(error || 'Errore sconosciuto');
+                loading.replaceChildren();
+                loading.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;background:#0f172a;color:#fecaca;font:500 14px Inter,sans-serif;text-align:center';
+                const title = document.createElement('strong');
+                title.textContent = 'Impossibile caricare la mappa';
+                const message = document.createElement('span');
+                message.textContent = detail;
+                const back = document.createElement('a');
+                back.href = './login.html';
+                back.textContent = 'Torna al login';
+                back.style.cssText = 'margin-top:8px;color:#c7d2fe;text-decoration:underline';
+                loading.append(title, message, back);
+                console.error('Avvio mappa non riuscito:', error);
+            };
+            window.addEventListener('error', event => showStartupError(event.error || event.message));
+            window.addEventListener('unhandledrejection', event => showStartupError(event.reason));
+            window.addEventListener('map-startup-error', event => showStartupError(event.detail));
+        })();
+    </script>
 
     <!-- Barra Laterale -->
     <aside id="map-sidebar" class="w-80 bg-slate-900 border-r border-slate-700 flex flex-col shadow-2xl z-20 shrink-0">
@@ -538,7 +564,133 @@ Total output lines: 1398
         const playerDeletedTokenIds = new Set();
 
         const viewport = document.getElementById('map-viewport');
-        c…3035 tokens truncated…d !== false;
+        const wrapper = document.getElementById('map-wrapper');
+        const mapContainer = document.getElementById('map-container');
+        const zoomLevelText = document.getElementById('zoom-level');
+        const toggleGridCheckbox = document.getElementById('toggle-grid');
+        const cellSizeInput = document.getElementById('cell-size');
+        const cellSizeNumber = document.getElementById('cell-size-number');
+        const snapToGridCheckbox = document.getElementById('snap-to-grid');
+        const autoFitImageCheckbox = document.getElementById('auto-fit-image');
+        const mapSidebar = document.getElementById('map-sidebar');
+        const editToggleButton = document.getElementById('btn-toggle-edit');
+        const editToggleLabel = document.getElementById('edit-toggle-label');
+        const openMenuButton = document.getElementById('btn-open-menu');
+
+        tokenManager.configure({
+            state,
+            viewport,
+            wrapper,
+            mapContainer,
+            cellSize: () => cellSize(),
+            colorWithOpacity,
+            renderBoardTokens: () => renderBoardTokens(),
+            saveTokens: () => saveTokens(),
+            showToast: message => showToast(message),
+            isPlayerMode: () => playerMode,
+            markPlayerTokenDeleted: id => playerDeletedTokenIds.add(id)
+        });
+
+        function cellSize() { return state.map.cellSize; }
+        function mapWidth() { return state.map.widthPx || state.map.cols * cellSize(); }
+        function mapHeight() { return state.map.heightPx || state.map.rows * cellSize(); }
+
+        function isImageUrl(value) {
+            return /^https?:\/\//i.test(value) || value.startsWith('data:image');
+        }
+
+        async function authorizeMapEntry() {
+            let approvedEntry = new URLSearchParams(window.location.search).get('entry');
+            try { approvedEntry ||= sessionStorage.getItem(LOGIN_GATE_KEY); } catch (error) {}
+
+            if (approvedEntry === 'demo') {
+                return 'demo';
+            }
+
+            if (approvedEntry !== 'account' || !cloudEnabled) {
+                if (cloudClient) await cloudClient.auth.signOut({ scope: 'local' }).catch(() => {});
+                window.location.replace('./login.html');
+                return false;
+            }
+
+            try …1480 tokens truncated… token.templateId);
+            return !template || template.category !== 'nemici';
+        }
+
+        function getPersistedState() {
+            return {
+                palette: state.palette,
+                boardTokens: state.boardTokens,
+                savedMaps: state.savedMaps,
+                map: state.map,
+                music: youtubeMusic.getSettings()
+            };
+        }
+
+        function persistLocalState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistedState()));
+            } catch (error) {
+                showToast('Impossibile salvare le pedine in questo browser.');
+                console.warn('Impossibile salvare le pedine:', error);
+            }
+        }
+
+        function saveTokens() {
+            persistLocalState();
+            if (!cloudUser || applyingCloudState) return;
+            clearTimeout(cloudSaveTimer);
+            cloudSaveTimer = setTimeout(saveStateToCloud, 900);
+        }
+
+        youtubeMusic.addEventListener('music-settings-change', event => {
+            state.music = event.detail;
+            saveTokens();
+        });
+        youtubeMusic.addEventListener('music-toast', event => showToast(event.detail));
+
+        function exportMapBackup() {
+            const blob = new Blob([JSON.stringify(getPersistedState(), null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'backup-mappa-tattica.json';
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function setCloudStatus(message, error = false) {
+            const status = document.getElementById('cloud-status');
+            status.textContent = message;
+            status.className = `mb-2 ${error ? 'text-rose-300' : 'text-slate-400'}`;
+        }
+
+        function setCloudConnectionStatus(online) {
+            const status = document.getElementById('cloud-connection-status');
+            status.className = `inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-bold normal-case tracking-normal ${online ? 'text-emerald-300 bg-emerald-950/70 border-emerald-900' : 'text-rose-300 bg-rose-950/70 border-rose-900'}`;
+            status.innerHTML = `<span class="h-1.5 w-1.5 rounded-full ${online ? 'bg-emerald-400' : 'bg-rose-400'}" aria-hidden="true"></span>${online ? 'Online' : 'Offline'}`;
+        }
+
+        function renderCloudAccount(user = null) {
+            document.getElementById('cloud-auth-form').classList.toggle('hidden', !cloudEnabled || Boolean(user));
+            document.getElementById('cloud-account-controls').classList.toggle('hidden', !user);
+            document.getElementById('cloud-account-email').textContent = user?.email || '';
+        }
+
+        function applyCloudState(saved) {
+            if (!saved || typeof saved !== 'object') return;
+            applyingCloudState = true;
+            try {
+                state.palette = Array.isArray(saved.palette) ? saved.palette : [];
+                state.boardTokens = Array.isArray(saved.boardTokens) ? saved.boardTokens : [];
+                state.savedMaps = Array.isArray(saved.savedMaps) ? saved.savedMaps : [];
+                state.music = youtubeMusic.setSettings(saved.music, { emit: false });
+                if (saved.map && typeof saved.map === 'object') {
+                    state.map.cols = Math.max(5, Math.min(200, parseInt(saved.map.cols, 10) || 20));
+                    state.map.rows = Math.max(5, Math.min(200, parseInt(saved.map.rows, 10) || 15));
+                    state.map.cellSize = Math.max(5, Math.min(100, parseInt(saved.map.cellSize, 10) || 40));
+                    state.map.bg = typeof saved.map.bg === 'string' ? saved.map.bg : '#334155';
+                    state.map.showGrid = saved.map.showGrid !== false;
                     state.map.snapToGrid = saved.map.snapToGrid !== false;
                     state.map.autoFitImage = saved.map.autoFitImage !== false;
                     state.map.widthPx = Number(saved.map.widthPx) > 0 ? Number(saved.map.widthPx) : state.map.cols * state.map.cellSize;
@@ -1156,7 +1308,7 @@ Total output lines: 1398
             }
         });
 
-        init();
+        init().catch(error => window.dispatchEvent(new CustomEvent('map-startup-error', { detail: error })));
         if (window.location.protocol === 'http:' && ['127.0.0.1', 'localhost'].includes(window.location.hostname)) {
             checkLocalServer();
             pingLocalServer();
