@@ -9,48 +9,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
     <title>Mappa Tattica D&amp;D</title>
-    <style>
-        :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; background: #090c11; color: #f8fafc; }
-        * { box-sizing: border-box; }
-        body { min-height: 100vh; margin: 0; overflow-x: hidden; background-color: #090c11; background-image: linear-gradient(90deg, rgba(7,10,14,.94) 0%, rgba(7,10,14,.82) 46%, rgba(7,10,14,.55) 100%), linear-gradient(0deg, rgba(7,10,14,.66), transparent 45%), url("https://images.unsplash.com/photo-1651677584025-6c844f0bd65c?auto=format&fit=crop&fm=jpg&q=85&w=2400"); background-position: center, center, center 53%; background-size: cover; background-attachment: fixed; }
-        body::before { position: fixed; inset: 0; z-index: 0; pointer-events: none; content: ""; opacity: .18; background-image: repeating-radial-gradient(ellipse at 20% 35%, transparent 0 34px, rgba(214,178,112,.22) 35px 36px, transparent 37px 67px), repeating-radial-gradient(ellipse at 82% 74%, transparent 0 42px, rgba(214,178,112,.16) 43px 44px, transparent 45px 78px), linear-gradient(115deg, rgba(3,7,9,.15), rgba(3,7,9,.76)); background-size: 620px 480px, 760px 620px, cover; mask-image: linear-gradient(90deg, #000, transparent 94%); }
-        a { color: inherit; text-decoration: none; }
-        .page { position: relative; z-index: 1; display: flex; min-height: 100vh; flex-direction: column; }
-        header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.5rem clamp(1.25rem, 5vw, 5rem); }
-        .brand { display: inline-flex; align-items: center; gap: .8rem; font-size: .92rem; font-weight: 800; letter-spacing: .1em; }
-        .brand img { width: 2.8rem; height: 2.8rem; border: 1px solid rgba(255,255,255,.15); border-radius: .9rem; object-fit: cover; box-shadow: 0 8px 28px #0008; }
-        .header-link { padding: .7rem 1rem; border: 1px solid rgba(148,163,184,.2); border-radius: .8rem; color: #cbd5e1; font-size: .82rem; font-weight: 600; transition: border-color .2s, background .2s; }
-        .header-link:hover { border-color: rgba(165,180,252,.5); background: rgba(99,102,241,.12); }
-        main { display: grid; flex: 1; grid-template-columns: minmax(0, 1fr) minmax(280px, .8fr); align-items: center; gap: clamp(2rem, 7vw, 7rem); width: min(1240px, 100%); margin: 0 auto; padding: 3rem clamp(1.25rem, 5vw, 5rem) 5rem; }
-        .copy { max-width: 640px; }
-        .eyebrow { display: inline-flex; align-items: center; gap: .55rem; color: #e7bd78; font-size: .72rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
-        .eyebrow::before { width: 1.6rem; height: 1px; background: #c99a52; content: ""; }
-        h1 { margin: 1.25rem 0 1rem; font-size: clamp(3rem, 7vw, 6rem); line-height: .98; letter-spacing: -.075em; }
-        h1 span { display: block; color: #e7bd78; }
-        .intro { max-width: 510px; color: #a8b3c7; font-size: clamp(1rem, 1.6vw, 1.14rem); line-height: 1.8; }
-        .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 2rem; }
-        .play { display: inline-flex; align-items: center; justify-content: center; gap: .75rem; min-width: 180px; padding: 1rem 1.35rem; border: 1px solid rgba(199,210,254,.42); border-radius: 1rem; background: linear-gradient(135deg, #6366f1, #4f46e5 60%, #4338ca); box-shadow: 0 14px 40px rgba(79,70,229,.34), inset 0 1px rgba(255,255,255,.2); font-size: 1rem; font-weight: 800; transition: transform .18s, box-shadow .18s; }
-        .play:hover { transform: translateY(-2px); box-shadow: 0 18px 48px rgba(79,70,229,.46), inset 0 1px rgba(255,255,255,.2); }
-        .play svg { width: 1.15rem; height: 1.15rem; }
-        .hint { color: #738097; font-size: .78rem; }
-        .art { position: relative; display: grid; min-height: 420px; place-items: center; }
-        .glow { position: absolute; width: min(31rem, 80vw); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(99,102,241,.24), rgba(30,41,59,.08) 52%, transparent 70%); filter: blur(6px); }
-        .map-card { position: relative; width: min(430px, 100%); aspect-ratio: 1.12; overflow: hidden; transform: rotate(-4deg); border: 1px solid rgba(165,180,252,.25); border-radius: 1.6rem; background: linear-gradient(145deg, rgba(30,41,59,.9), rgba(15,23,42,.82)); box-shadow: 0 34px 90px #0008, inset 0 1px rgba(255,255,255,.06); }
-        .map-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(148,163,184,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.16) 1px, transparent 1px); background-size: 38px 38px; mask-image: radial-gradient(ellipse, #000 25%, transparent 78%); }
-        .map-river { position: absolute; top: 20%; left: 37%; width: 45%; height: 95%; transform: rotate(34deg); border: 25px solid transparent; border-left-color: rgba(56,189,248,.17); border-radius: 46%; filter: blur(2px); }
-        .pin { position: absolute; display: grid; width: 3.2rem; height: 3.2rem; place-items: center; border: 2px solid rgba(255,255,255,.88); border-radius: 50%; background: linear-gradient(145deg, #fb7185, #be123c); box-shadow: 0 8px 25px #020617a6, inset 0 2px 6px #fff7; font-size: 1.15rem; }
-        .pin.one { top: 28%; left: 27%; }
-        .pin.two { top: 48%; left: 58%; background: linear-gradient(145deg, #34d399, #047857); }
-        .pin.three { top: 67%; left: 37%; width: 2.6rem; height: 2.6rem; background: linear-gradient(145deg, #fbbf24, #b45309); }
-        .map-label { position: absolute; right: 1.4rem; bottom: 1.3rem; padding: .55rem .75rem; border: 1px solid rgba(148,163,184,.18); border-radius: .7rem; background: rgba(2,6,23,.68); color: #cbd5e1; font-size: .67rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
-        footer { padding: 1.25rem; color: #526078; text-align: center; font-size: .72rem; }
-        @media (max-width: 800px) { main { grid-template-columns: 1fr; gap: 1rem; padding-top: 3.5rem; } .art { min-height: 300px; } .map-card { width: min(360px, 88vw); } .header-link { font-size: .75rem; } }
-        @media (max-width: 420px) { .brand { font-size: .75rem; } .brand img { width: 2.35rem; height: 2.35rem; } .actions { align-items: flex-start; flex-direction: column; } }
-        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
-    </style>
 </head>
-<body>
+<body class="home-page">
     <div class="page">
         <header>
             <a class="brand" href="./index.html" aria-label="Mappa Tattica D&D, home">
