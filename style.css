@@ -229,6 +229,93 @@ body.credits-page {
             z-index: 50;
         }
 
+        .dice-roll-overlay {
+            position: absolute;
+            z-index: 40;
+            top: 50%;
+            left: 50%;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            width: min(20rem, calc(100% - 2rem));
+            padding: 1rem 1.2rem;
+            border: 1px solid rgba(129, 140, 248, .42);
+            border-radius: 1.25rem;
+            background: rgba(15, 23, 42, .94);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .55);
+            backdrop-filter: blur(14px);
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, calc(-50% + 8px));
+            transition: opacity 180ms ease, transform 180ms ease;
+        }
+        .dice-roll-overlay.is-visible { opacity: 1; transform: translate(-50%, -50%); }
+        .dice-roll-cube { flex: none; font-size: 4rem; line-height: 1; filter: drop-shadow(0 8px 12px rgba(99, 102, 241, .35)); }
+        .dice-roll-overlay.is-rolling .dice-roll-cube { animation: dice-tumble 950ms cubic-bezier(.2, .75, .25, 1); }
+
+        #btn-open-dice {
+            position: absolute;
+            z-index: 30;
+            bottom: 1.25rem;
+            left: 1.25rem;
+            display: grid;
+            width: 3.5rem;
+            height: 3.5rem;
+            place-items: center;
+            border: 1px solid rgba(165, 180, 252, .6);
+            border-radius: 1.15rem;
+            background: linear-gradient(145deg, rgba(99, 102, 241, .98), rgba(67, 56, 202, .98));
+            color: #eef2ff;
+            box-shadow: 0 8px 24px rgba(2, 6, 23, .5), inset 0 1px 0 rgba(255, 255, 255, .2);
+            transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+            touch-action: manipulation;
+        }
+        #btn-open-dice:hover { transform: translateY(-2px); filter: brightness(1.12); box-shadow: 0 12px 28px rgba(2, 6, 23, .58); }
+        #btn-open-dice:active { transform: scale(.95); }
+        #btn-open-dice svg { width: 2rem; height: 2rem; fill: rgba(224, 231, 255, .15); stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; }
+        #btn-open-dice .d20-mark { fill: currentColor; stroke-width: 1; }
+
+        .dice-dialog-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 80;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(2, 6, 23, .72);
+            backdrop-filter: blur(8px);
+        }
+        .dice-dialog-backdrop.hidden { display: none; }
+        .dice-dialog {
+            position: relative;
+            width: min(100%, 28rem);
+            max-height: min(90dvh, 42rem);
+            overflow: auto;
+            border: 1px solid rgba(129, 140, 248, .36);
+            border-radius: 1.35rem;
+            background: linear-gradient(155deg, rgba(30, 41, 59, .99), rgba(15, 23, 42, .99) 58%);
+            box-shadow: 0 28px 90px rgba(0, 0, 0, .65), inset 0 1px 0 rgba(255, 255, 255, .05);
+            animation: dice-dialog-in 180ms cubic-bezier(.2, .8, .2, 1) both;
+        }
+        .dice-dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem 1.25rem 1rem; border-bottom: 1px solid rgba(71, 85, 105, .55); }
+        .dice-dialog-content { padding: 1.25rem; }
+        .dice-dialog-close { display: grid; width: 2.75rem; height: 2.75rem; flex: none; place-items: center; border: 1px solid rgba(100, 116, 139, .55); border-radius: .9rem; background: rgba(15, 23, 42, .75); color: #cbd5e1; font-size: 1.8rem; line-height: 1; transition: background 150ms ease, color 150ms ease; }
+        .dice-dialog-close:hover { background: rgba(51, 65, 85, .9); color: #fff; }
+        @keyframes dice-dialog-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes dice-tumble {
+            0% { transform: translateY(-14px) rotateX(0) rotateY(0) rotateZ(0) scale(.7); }
+            22% { transform: translateY(4px) rotateX(230deg) rotateY(160deg) rotateZ(120deg) scale(1.18); }
+            48% { transform: translateY(-7px) rotateX(520deg) rotateY(390deg) rotateZ(250deg) scale(.94); }
+            73% { transform: translateY(2px) rotateX(760deg) rotateY(620deg) rotateZ(410deg) scale(1.08); }
+            100% { transform: translateY(0) rotateX(1080deg) rotateY(900deg) rotateZ(720deg) scale(1); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .dice-roll-overlay, .dice-roll-overlay.is-visible, #btn-open-dice { transition: none; }
+            .dice-roll-overlay.is-rolling .dice-roll-cube { animation-duration: 1ms; }
+            .dice-dialog { animation-duration: 1ms; }
+        }
+
         .palette-item {
             cursor: grab;
         }

@@ -105,7 +105,7 @@
                     </div>
                 </details>
             </section>
-            
+
             <!-- Impostazioni Mappa -->
             <section class="bg-slate-800/90 p-3 rounded-lg border border-slate-700 text-xs">
                 <h2 class="mb-2.5 flex items-center gap-2 font-semibold uppercase tracking-wider text-slate-300">
@@ -196,10 +196,22 @@
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
             <span>Menu</span>
         </button>
+        <button id="btn-open-dice" type="button" aria-label="Apri il lanciadadi" aria-controls="dice-dialog" aria-expanded="false" title="Tira i dadi">
+            <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3 42 14v20L24 45 6 34V14L24 3Z"/><path d="M24 3v18m18-7-18 7-18-7m18 7v24M6 34l18-13 18 13M15 9l9 12 9-12M15 39l9-18 9 18"/><path d="m24 14 3 5-3 5-3-5 3-5Z" class="d20-mark"/></svg>
+        </button>
         <div id="map-wrapper" class="absolute origin-top-left flex items-center justify-center min-w-full min-h-full">
             <div id="map-container" class="grid-pattern relative border border-slate-700"></div>
         </div>
-        
+
+        <div id="dice-roll-overlay" class="dice-roll-overlay" role="status" aria-live="assertive" aria-atomic="true">
+            <div id="dice-roll-cube" class="dice-roll-cube" aria-hidden="true">🎲</div>
+            <div class="min-w-0 flex-1">
+                <p id="dice-roll-heading" class="truncate text-[10px] font-bold uppercase tracking-[.16em] text-indigo-200">Tiro di dado</p>
+                <p id="dice-roll-notation" class="mt-1 text-xs font-semibold text-slate-400">D20</p>
+                <p id="dice-roll-result" class="mt-0.5 text-2xl font-extrabold tracking-tight text-white">…</p>
+            </div>
+        </div>
+
         <!-- Controlli Zoom Flottanti -->
         <div class="absolute bottom-5 right-5 flex bg-slate-800/90 rounded-lg shadow-xl border border-slate-700 overflow-hidden z-20 text-xs">
             <button id="btn-zoom-out" class="p-2 hover:bg-slate-700 text-slate-300 font-bold" title="Zoom Out">−</button>
@@ -207,6 +219,39 @@
             <button id="btn-zoom-in" class="p-2 hover:bg-slate-700 text-slate-300 font-bold" title="Zoom In">+</button>
         </div>
     </main>
+
+    <div id="dice-dialog-backdrop" class="dice-dialog-backdrop hidden" aria-hidden="true">
+        <section id="dice-dialog" class="dice-dialog" role="dialog" aria-modal="true" aria-labelledby="dice-dialog-title">
+            <header class="dice-dialog-header">
+                <div>
+                    <p class="text-[10px] font-bold uppercase tracking-[.2em] text-indigo-300">Lancia i dadi</p>
+                    <h2 id="dice-dialog-title" class="mt-1 text-xl font-extrabold text-white">🎲 Tiri di dado</h2>
+                </div>
+                <button id="btn-close-dice" type="button" class="dice-dialog-close" aria-label="Chiudi il lanciadadi">×</button>
+            </header>
+            <div class="dice-dialog-content">
+                <div class="mb-4 grid grid-cols-[minmax(0,1fr)_5rem] gap-3">
+                    <label class="block text-sm text-slate-300">Dado
+                        <select id="dice-sides" class="mt-1 h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-base text-white outline-none focus:border-indigo-400">
+                            <option value="4">D4</option><option value="6">D6</option><option value="8">D8</option><option value="10">D10</option><option value="12">D12</option><option value="20" selected>D20</option><option value="100">D100</option>
+                        </select>
+                    </label>
+                    <label class="block text-sm text-slate-300">Quanti
+                        <input id="dice-count" type="number" min="1" max="10" value="1" inputmode="numeric" class="mt-1 h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-center text-base text-white outline-none focus:border-indigo-400">
+                    </label>
+                </div>
+                <div class="mb-4 rounded-xl border border-slate-700/80 bg-slate-950/70 px-4 py-3">
+                    <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Ultimo tiro</p>
+                    <p id="dice-last-result" class="mt-1 text-base font-bold text-slate-100">Nessun tiro</p>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="dice-roll-personal" type="button" class="min-h-12 rounded-xl border border-slate-600 bg-slate-700/80 px-2 py-2 text-sm font-semibold text-slate-100 transition hover:border-slate-500 hover:bg-slate-700 active:scale-[.98]">🎲 Personale</button>
+                    <button id="dice-roll-public" type="button" class="min-h-12 rounded-xl border border-indigo-400/40 bg-indigo-600 px-2 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-950/30 transition hover:bg-indigo-500 active:scale-[.98] disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none">📣 Per tutti</button>
+                </div>
+                <p id="dice-public-status" class="mt-3 text-xs leading-5 text-slate-400" role="status" aria-live="polite">Il tiro per tutti è disponibile quando il cloud è online.</p>
+            </div>
+        </section>
+    </div>
 
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-700 text-slate-200 text-xs px-3 py-2 rounded-lg shadow-xl opacity-0 transition-opacity duration-300 pointer-events-none z-50"></div>
@@ -247,6 +292,10 @@
         let cloudSaveTimer = null;
         let lastCloudStateJson = null;
         let applyingCloudState = false;
+        let diceBroadcastReady = false;
+        let diceAnimationTimer = null;
+        let diceOverlayTimer = null;
+        const diceSenderId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
         const pageParams = new URLSearchParams(window.location.search);
         let storedRole = null;
         try { storedRole = sessionStorage.getItem('dnd-map-role'); } catch (error) {}
@@ -334,6 +383,7 @@
             centerMap();
             if (state.map.autoFitImage && isImageUrl(state.map.bg)) fitMapToImage(state.map.bg);
             initializeCloudSync(entryMode === 'demo');
+            initializeDiceRoller();
         }
 
         function setSidebarCollapsed(collapsed) {
@@ -457,6 +507,125 @@
             status.className = `mb-2 ${error ? 'text-rose-300' : 'text-slate-400'}`;
         }
 
+        const DICE_SIDES = new Set([4, 6, 8, 10, 12, 20, 100]);
+
+        function setDiceBroadcastReady(ready) {
+            diceBroadcastReady = Boolean(ready && cloudUser && cloudChannel);
+            const button = document.getElementById('dice-roll-public');
+            const status = document.getElementById('dice-public-status');
+            if (!button || !status) return;
+            button.disabled = !diceBroadcastReady;
+            status.textContent = diceBroadcastReady
+                ? 'Il tiro pubblico verrà mostrato a tutti gli utenti collegati al cloud.'
+                : 'Il tiro per tutti è disponibile quando il cloud è online.';
+        }
+
+        function randomDieRoll(sides) {
+            if (!window.crypto?.getRandomValues) return Math.floor(Math.random() * sides) + 1;
+            const range = 0x100000000;
+            const limit = range - (range % sides);
+            const value = new Uint32Array(1);
+            do { window.crypto.getRandomValues(value); } while (value[0] >= limit);
+            return (value[0] % sides) + 1;
+        }
+
+        function initializeDiceRoller() {
+            const openButton = document.getElementById('btn-open-dice');
+            const closeButton = document.getElementById('btn-close-dice');
+            const backdrop = document.getElementById('dice-dialog-backdrop');
+            const sidesSelect = document.getElementById('dice-sides');
+            const closeDialog = () => closeDiceDialog();
+            openButton.addEventListener('click', () => {
+                backdrop.classList.remove('hidden');
+                backdrop.setAttribute('aria-hidden', 'false');
+                openButton.setAttribute('aria-expanded', 'true');
+                sidesSelect.focus();
+            });
+            closeButton.addEventListener('click', closeDialog);
+            backdrop.addEventListener('click', event => {
+                if (event.target === backdrop) closeDialog();
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !backdrop.classList.contains('hidden')) closeDialog();
+            });
+            document.getElementById('dice-roll-personal').addEventListener('click', () => performDiceRoll(false));
+            document.getElementById('dice-roll-public').addEventListener('click', () => performDiceRoll(true));
+            setDiceBroadcastReady(false);
+        }
+
+        function closeDiceDialog() {
+            const backdrop = document.getElementById('dice-dialog-backdrop');
+            if (backdrop.classList.contains('hidden')) return;
+            backdrop.classList.add('hidden');
+            backdrop.setAttribute('aria-hidden', 'true');
+            const openButton = document.getElementById('btn-open-dice');
+            openButton.setAttribute('aria-expanded', 'false');
+            openButton.focus();
+        }
+
+        async function performDiceRoll(isPublic) {
+            const sides = Number(document.getElementById('dice-sides').value);
+            const countInput = document.getElementById('dice-count');
+            const count = Math.max(1, Math.min(10, Number.parseInt(countInput.value, 10) || 1));
+            countInput.value = String(count);
+            if (!DICE_SIDES.has(sides) || (isPublic && (!diceBroadcastReady || !cloudChannel || !cloudUser))) return;
+
+            const roll = {
+                id: window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                senderId: diceSenderId,
+                actor: playerMode ? 'Player' : 'Master',
+                sides,
+                count,
+                results: Array.from({ length: count }, () => randomDieRoll(sides))
+            };
+            roll.total = roll.results.reduce((sum, result) => sum + result, 0);
+
+            if (isPublic) {
+                try {
+                    const result = await cloudChannel.send({ type: 'broadcast', event: 'dice_roll', payload: roll });
+                    if (result !== 'ok') throw new Error(`Risposta realtime: ${result}`);
+                } catch (error) {
+                    console.error('Invio tiro pubblico non riuscito:', error);
+                    showToast('Non riesco a inviare il tiro a tutti. Controlla la connessione cloud.');
+                    return;
+                }
+            }
+            closeDiceDialog();
+            showDiceRoll(roll, !isPublic);
+        }
+
+        function showDiceRoll(roll, personal = false) {
+            const notation = `${roll.count}d${roll.sides}`;
+            const results = roll.results.join(' + ');
+            const resultText = roll.count === 1 ? String(roll.total) : `${results} = ${roll.total}`;
+            document.getElementById('dice-last-result').textContent = `${notation}: ${resultText}${personal ? ' · personale' : ' · pubblico'}`;
+
+            const overlay = document.getElementById('dice-roll-overlay');
+            document.getElementById('dice-roll-heading').textContent = personal ? 'Tiro personale' : `Tiro pubblico · ${roll.actor}`;
+            document.getElementById('dice-roll-notation').textContent = notation;
+            const resultElement = document.getElementById('dice-roll-result');
+            resultElement.textContent = '…';
+            clearTimeout(diceAnimationTimer);
+            clearTimeout(diceOverlayTimer);
+            overlay.classList.remove('is-rolling', 'is-visible');
+            void overlay.offsetWidth;
+            overlay.classList.add('is-visible', 'is-rolling');
+            diceAnimationTimer = window.setTimeout(() => {
+                overlay.classList.remove('is-rolling');
+                resultElement.textContent = resultText;
+            }, 950);
+            diceOverlayTimer = window.setTimeout(() => overlay.classList.remove('is-visible'), 4500);
+        }
+
+        function handleIncomingDiceRoll(roll) {
+            if (!roll || typeof roll !== 'object' || roll.senderId === diceSenderId || !DICE_SIDES.has(roll.sides)) return;
+            if (!Number.isInteger(roll.count) || roll.count < 1 || roll.count > 10 || !Array.isArray(roll.results) || roll.results.length !== roll.count) return;
+            if (!roll.results.every(value => Number.isInteger(value) && value >= 1 && value <= roll.sides)) return;
+            if (!['Master', 'Player'].includes(roll.actor)) return;
+            const total = roll.results.reduce((sum, value) => sum + value, 0);
+            showDiceRoll({ ...roll, total }, false);
+        }
+
         function setCloudConnectionStatus(online) {
             const status = document.getElementById('cloud-connection-status');
             status.className = `inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-bold normal-case tracking-normal ${online ? 'text-emerald-300 bg-emerald-950/70 border-emerald-900' : 'text-rose-300 bg-rose-950/70 border-rose-900'}`;
@@ -539,6 +708,7 @@
 
             if (cloudChannel) await cloudClient.removeChannel(cloudChannel);
             cloudChannel = cloudClient.channel(`map-state-${user.id}`)
+                .on('broadcast', { event: 'dice_roll' }, ({ payload }) => handleIncomingDiceRoll(payload))
                 .on('postgres_changes', {
                     event: 'UPDATE', schema: 'public', table: 'map_states', filter: `user_id=eq.${user.id}`
                 }, payload => {
@@ -551,8 +721,11 @@
                     applyCloudState(incoming);
                     setCloudStatus('Aggiornamento ricevuto da un altro dispositivo.');
                 })
-                .subscribe();
-            setCloudConnectionStatus(true);
+                .subscribe(status => {
+                    const connected = status === 'SUBSCRIBED';
+                    setDiceBroadcastReady(connected);
+                    setCloudConnectionStatus(connected);
+                });
         }
 
         async function saveStateToCloud() {
@@ -591,6 +764,7 @@
             if (!user) {
                 cloudUser = null;
                 lastCloudStateJson = null;
+                setDiceBroadcastReady(false);
                 setCloudConnectionStatus(false);
                 if (cloudChannel && cloudClient) await cloudClient.removeChannel(cloudChannel);
                 cloudChannel = null;
@@ -609,6 +783,7 @@
 
         function initializeCloudSync(demoMode = false) {
             if (demoMode) {
+                setDiceBroadcastReady(false);
                 renderCloudAccount();
                 document.getElementById('cloud-auth-form').classList.add('hidden');
                 const returnToLoginButton = document.getElementById('demo-return-login');
@@ -623,6 +798,7 @@
                 return;
             }
             if (!cloudEnabled) {
+                setDiceBroadcastReady(false);
                 renderCloudAccount();
                 setCloudConnectionStatus(false);
                 setCloudStatus('Configura Supabase seguendo LEGGIMI.txt per attivare la sincronizzazione.');
