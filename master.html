@@ -698,25 +698,32 @@
             if (activeGameSessionId) {
                 setCloudStatus('Carico la sessione…');
                 const { data: gameSession, error: sessionError } = await cloudClient
-                    .from('game_sessions').select('id,name,owner_id,state')
+                    .from('game_sessions').select('id,name,owner_id')
                     .eq('id', activeGameSessionId).maybeSingle();
                 if (sessionError) throw sessionError;
                 if (!gameSession) throw new Error('Non hai accesso a questa sessione o non esiste più.');
                 document.getElementById('cloud-status').textContent = `Sessione: ${gameSession.name}`;
                 const roleButton = document.getElementById('cloud-change-role');
                 roleButton.textContent = '← Torna alle sessioni';
-                if (gameSession.state) {
-                    lastCloudStateJson = JSON.stringify(gameSession.state);
-                    applyCloudState(gameSession.state);
+                const { data: sessionState, error: stateError } = await cloudClient.rpc('get_game_session_state', {
+                    p_session_id: activeGameSessionId
+                });
+                if (stateError) throw stateError;
+                if (sessionState) {
+                    lastCloudStateJson = JSON.stringify(sessionState);
+                    applyCloudState(sessionState);
                 }
                 if (cloudChannel) await cloudClient.removeChannel(cloudChannel);
                 cloudChannel = cloudClient.channel(`session:${activeGameSessionId}`, { config: { private: true } })
                     .on('broadcast', { event: 'dice_roll' }, ({ payload }) => handleIncomingDiceRoll(payload))
-                    .on('postgres_changes', {
-                        event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${activeGameSessionId}`
-                    }, payload => {
-                        const incoming = payload.new?.state;
-                        if (!incoming) return;
+                    .on('broadcast', { event: 'session_state_updated' }, async () => {
+                        const { data: incoming, error } = await cloudClient.rpc('get_game_session_state', {
+                            p_session_id: activeGameSessionId
+                        });
+                        if (error || !incoming) {
+                            if (error) console.error('Lettura aggiornata della sessione non riuscita:', error);
+                            return;
+                        }
                         const incomingJson = JSON.stringify(incoming);
                         if (incomingJson === lastCloudStateJson) return;
                         clearTimeout(cloudSaveTimer);

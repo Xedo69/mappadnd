@@ -376,11 +376,16 @@
             document.getElementById('adventurer-token-count').textContent = state.palette.filter(item => (item.category || 'avventurieri') === 'avventurieri').length;
             document.getElementById('enemy-token-count').textContent = state.palette.filter(item => item.category === 'nemici').length;
 
+            const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[character]);
             state.palette.forEach(template => {
                 const category = template.category === 'nemici' ? 'nemici' : 'avventurieri';
                 const target = containers[category];
                 target.querySelector('.empty-category-msg').style.display = 'none';
                 const item = document.createElement('div');
+                const safeName = escapeHtml(template.name);
+                const safeSize = escapeHtml(template.size);
                 item.className = 'palette-item bg-slate-800/90 border border-slate-700 rounded-lg p-1.5 flex items-center gap-2 hover:bg-slate-700 transition select-none';
                 item.draggable = !window.matchMedia('(pointer: coarse)').matches;
                 item.addEventListener('dragstart', event => {
@@ -392,7 +397,7 @@
                     if (event.target.closest('button')) return;
                     if (window.matchMedia('(pointer: coarse)').matches) this.placeTokenAtMapCenter(template);
                 });
-                item.innerHTML = `<div class="palette-avatar w-7 h-7 rounded-full border border-white/60 flex items-center justify-center text-[10px] font-bold shadow shrink-0">${template.name.substring(0, 2).toUpperCase()}</div><div class="flex-1 overflow-hidden"><p class="font-semibold text-white truncate text-xs">${template.name}</p><p class="text-[10px] text-slate-400 leading-tight">${template.size}x${template.size} quadretti</p></div><button class="btn-toggle-token-visibility p-1 text-slate-400 hover:text-white disabled:cursor-not-allowed disabled:opacity-40" type="button"></button><button class="btn-edit-pal p-1 text-slate-400 hover:text-white" title="Modifica pedina" type="button">✏️</button><button class="btn-del-pal p-1 text-slate-400 hover:text-rose-400" title="Elimina dalla lista" type="button">🗑️</button>`;
+                item.innerHTML = `<div class="palette-avatar w-7 h-7 rounded-full border border-white/60 flex items-center justify-center text-[10px] font-bold shadow shrink-0">${safeName.substring(0, 2).toUpperCase()}</div><div class="flex-1 overflow-hidden"><p class="font-semibold text-white truncate text-xs">${safeName}</p><p class="text-[10px] text-slate-400 leading-tight">${safeSize}x${safeSize} quadretti</p></div><button class="btn-toggle-token-visibility p-1 text-slate-400 hover:text-white disabled:cursor-not-allowed disabled:opacity-40" type="button"></button><button class="btn-edit-pal p-1 text-slate-400 hover:text-white" title="Modifica pedina" type="button">✏️</button><button class="btn-del-pal p-1 text-slate-400 hover:text-rose-400" title="Elimina dalla lista" type="button">🗑️</button>`;
                 const avatar = item.querySelector('.palette-avatar');
                 avatar.style.backgroundColor = colorWithOpacity(template.color, template.opacity ?? 100);
                 if (template.image) {

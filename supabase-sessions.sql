@@ -1,5 +1,5 @@
 -- Sessioni di gioco condivise per Mappa Tattica D&D.
--- Eseguire una sola volta nel SQL Editor del progetto Supabase.
+-- Eseguire nel SQL Editor di Supabase anche quando si applica un aggiornamento.
 
 create table if not exists public.game_sessions (
     id uuid primary key default gen_random_uuid(),
@@ -42,8 +42,13 @@ alter table public.game_sessions enable row level security;
 alter table public.game_session_members enable row level security;
 
 revoke all on public.game_sessions from anon, authenticated;
+revoke all on public.game_sessions from public;
+revoke select (state) on public.game_sessions from authenticated;
 revoke all on public.game_session_members from anon, authenticated;
-grant select, insert, delete on public.game_sessions to authenticated;
+revoke all on public.game_session_members from public;
+grant select (id, name, owner_id, invite_code, created_at, updated_at) on public.game_sessions to authenticated;
+grant insert (owner_id, name, state) on public.game_sessions to authenticated;
+grant delete on public.game_sessions to authenticated;
 grant update (state, updated_at) on public.game_sessions to authenticated;
 grant select on public.game_session_members to authenticated;
 
@@ -111,6 +116,69 @@ $$;
 
 revoke all on function public.join_game_session(text) from public, anon;
 grant execute on function public.join_game_session(text) to authenticated;
+
+-- Lo stato completo è restituito al Master; i Player ricevono solo elementi visibili.
+create or replace function public.get_game_session_state(p_session_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    v_user_id uuid := auth.uid();
+    v_state jsonb;
+    v_is_owner boolean;
+    v_result jsonb;
+    v_palette jsonb;
+    v_tokens jsonb;
+begin
+    if v_user_id is null then
+        raise exception 'Devi accedere per leggere la sessione.' using errcode = '42501';
+    end if;
+
+    select s.state, s.owner_id = v_user_id
+      into v_state, v_is_owner
+    from public.game_sessions s
+    where s.id = p_session_id
+      and (s.owner_id = v_user_id or exists (
+          select 1 from public.game_session_members m
+          where m.session_id = s.id and m.user_id = v_user_id
+      ));
+
+    if v_state is null then
+        raise exception 'Sessione non trovata o accesso non consentito.' using errcode = '42501';
+    end if;
+    if v_is_owner then return v_state; end if;
+
+    select coalesce(jsonb_agg(p.value), '[]'::jsonb) into v_palette
+    from jsonb_array_elements(coalesce(v_state->'palette', '[]'::jsonb)) p(value)
+    where coalesce(p.value->>'category', 'avventurieri') <> 'nemici'
+      and not (p.value->>'hidden' = 'true'
+               and coalesce(p.value->>'hiddenBy', 'master') = 'master');
+
+    select coalesce(jsonb_agg(t.value), '[]'::jsonb) into v_tokens
+    from jsonb_array_elements(coalesce(v_state->'boardTokens', '[]'::jsonb)) t(value)
+    where coalesce(t.value->>'category', (
+        select p.value->>'category'
+        from jsonb_array_elements(coalesce(v_state->'palette', '[]'::jsonb)) p(value)
+        where p.value->>'id' = t.value->>'templateId'
+        limit 1
+    ), 'avventurieri') <> 'nemici'
+      and not (t.value->>'hidden' = 'true'
+               and coalesce(t.value->>'hiddenBy', 'master') = 'master');
+
+    v_result := jsonb_set(v_state, '{palette}', v_palette, true);
+    v_result := jsonb_set(v_result, '{boardTokens}', v_tokens, true);
+    -- Le mappe salvate sono una risorsa del Master e non servono ai Player.
+    if v_result ? 'savedMaps' then
+        v_result := jsonb_set(v_result, '{savedMaps}', '[]'::jsonb, true);
+    end if;
+    return v_result;
+end;
+$$;
+
+revoke all on function public.get_game_session_state(uuid) from public, anon;
+grant execute on function public.get_game_session_state(uuid) to authenticated;
 
 -- I Player possono salvare i propri token senza sovrascrivere mappa, nemici e
 -- impostazioni gestiti dal Master. I ruoli non possono aggiornare direttamente la riga.
@@ -212,12 +280,69 @@ begin
     set state = v_merged, updated_at = now()
     where id = p_session_id;
 
-    return v_merged;
+    return public.get_game_session_state(p_session_id);
 end;
 $$;
 
 revoke all on function public.save_player_session_state(uuid, jsonb, text[]) from public, anon;
 grant execute on function public.save_player_session_state(uuid, jsonb, text[]) to authenticated;
+
+-- Notifica solo che lo stato è cambiato: il contenuto non viene trasmesso via Realtime.
+create or replace function public.notify_game_session_state_updated()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+    perform realtime.send(
+        jsonb_build_object('session_id', new.id),
+        'session_state_updated',
+        'session:' || new.id::text,
+        true
+    );
+    return new;
+end;
+$$;
+
+revoke all on function public.notify_game_session_state_updated() from public, anon, authenticated;
+
+-- RLS automatico è un event trigger interno, non un endpoint dell'API.
+do $$
+begin
+    if to_regprocedure('public.rls_auto_enable()') is not null then
+        execute 'revoke all on function public.rls_auto_enable() from public, anon, authenticated';
+    end if;
+end;
+$$;
+
+drop trigger if exists game_session_state_updated_broadcast on public.game_sessions;
+create trigger game_session_state_updated_broadcast
+    after update of state on public.game_sessions
+    for each row execute function public.notify_game_session_state_updated();
+
+-- Le mappe personali sono private: un utente legge e modifica solo la propria riga.
+alter table public.map_states enable row level security;
+revoke all on public.map_states from anon, authenticated;
+revoke all on public.map_states from public;
+grant select, insert, update on public.map_states to authenticated;
+do $$
+declare p record;
+begin
+    for p in select policyname from pg_policies
+             where schemaname = 'public' and tablename = 'map_states'
+    loop
+        execute format('drop policy %I on public.map_states', p.policyname);
+    end loop;
+end;
+$$;
+create policy "users can read own map state" on public.map_states
+    for select to authenticated using (user_id = (select auth.uid()));
+create policy "users can insert own map state" on public.map_states
+    for insert to authenticated with check (user_id = (select auth.uid()));
+create policy "users can update own map state" on public.map_states
+    for update to authenticated using (user_id = (select auth.uid()))
+    with check (user_id = (select auth.uid()));
 
 -- I canali privati Realtime sono limitati ai proprietari e ai membri della sessione.
 drop policy if exists "session members can receive realtime broadcasts" on realtime.messages;
