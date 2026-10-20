@@ -288,6 +288,7 @@
             auth: { persistSession: true, detectSessionInUrl: false }
         }) : null;
         let cloudUser = null;
+        let authorizedCloudSession = null;
         let cloudChannel = null;
         let cloudSaveTimer = null;
         const CLOUD_SAVE_DEBOUNCE_MS = 250;
@@ -366,6 +367,7 @@
                 ]);
                 const { data, error } = sessionResult;
                 if (error || !data.session) throw error || new Error('Sessione non valida');
+                authorizedCloudSession = data.session;
                 return playerMode ? 'player' : 'account';
             } catch (error) {
                 try { sessionStorage.removeItem(LOGIN_GATE_KEY); } catch (storageError) {}
@@ -380,7 +382,9 @@
             if (!entryMode) return;
             document.body.classList.toggle('player-mode', entryMode === 'player');
             tokenManager.setPlayerMode?.(entryMode === 'player');
-            document.body.classList.remove('auth-checking');
+            document.getElementById('auth-loading').textContent = entryMode === 'player'
+                ? 'Ripristino la sessione di gioco…'
+                : 'Carico la mappa…';
             renderPalette();
             renderBoardTokens();
             renderSavedMaps();
@@ -389,8 +393,8 @@
             setSidebarCollapsed(window.matchMedia('(max-width: 768px)').matches);
             centerMap();
             if (state.map.autoFitImage && isImageUrl(state.map.bg)) fitMapToImage(state.map.bg);
-            initializeCloudSync(entryMode === 'demo');
             initializeDiceRoller();
+            await initializeCloudSync(entryMode === 'demo');
         }
 
         function setSidebarCollapsed(collapsed) {
@@ -870,7 +874,7 @@
             }
         }
 
-        function initializeCloudSync(demoMode = false) {
+        async function initializeCloudSync(demoMode = false) {
             if (demoMode) {
                 setDiceBroadcastReady(false);
                 renderCloudAccount();
@@ -884,6 +888,7 @@
                 });
                 setCloudConnectionStatus(false);
                 setCloudStatus('Modalità demo: sincronizzazione cloud disattivata.');
+                document.body.classList.remove('auth-checking');
                 return;
             }
             if (!cloudEnabled) {
@@ -891,20 +896,15 @@
                 renderCloudAccount();
                 setCloudConnectionStatus(false);
                 setCloudStatus('Configura Supabase seguendo LEGGIMI.txt per attivare la sincronizzazione.');
+                document.body.classList.remove('auth-checking');
                 return;
             }
             renderCloudAccount();
             setCloudConnectionStatus(false);
             setCloudStatus('Accedi per caricare il backup dal cloud.');
-            cloudClient.auth.onAuthStateChange((_event, session) => {
+            cloudClient.auth.onAuthStateChange((event, session) => {
+                if (event === 'INITIAL_SESSION') return;
                 window.setTimeout(() => handleCloudSession(session), 0);
-            });
-            cloudClient.auth.getSession().then(({ data, error }) => {
-                if (error) throw error;
-                return handleCloudSession(data.session);
-            }).catch(error => {
-                console.error('Errore sessione Supabase:', error);
-                setCloudStatus('Errore di connessione all’account cloud.', true);
             });
 
             document.getElementById('cloud-sign-in').addEventListener('click', async () => {
@@ -957,6 +957,12 @@
                     setCloudStatus(error.message || 'Impossibile importare il backup.', true);
                 }
             });
+
+            try {
+                await handleCloudSession(authorizedCloudSession);
+            } finally {
+                document.body.classList.remove('auth-checking');
+            }
         }
 
         function renderSavedMaps() {
