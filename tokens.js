@@ -32,6 +32,8 @@
                 color: template.color,
                 opacity: template.opacity ?? 100,
                 image: template.image || null,
+                hidden: Boolean(template.hidden),
+                hiddenBy: template.hidden ? (template.hiddenBy || 'master') : null,
                 size: template.size,
                 x,
                 y
@@ -120,11 +122,12 @@
 
         renderBoardTokens() {
             const { state, mapContainer, cellSize, colorWithOpacity, saveTokens } = this.context;
+            const isPlayerMode = this.context.isPlayerMode();
             mapContainer.querySelectorAll('.token').forEach(element => element.remove());
             state.boardTokens.forEach(token => {
-                if (token.hidden) return;
+                if (token.hidden && isPlayerMode && token.hiddenBy !== 'player') return;
                 const element = document.createElement('div');
-                element.className = 'token';
+                element.className = token.hidden ? 'token token-hidden' : 'token';
                 element.id = token.id;
                 const pixelSize = token.size * cellSize();
                 element.style.width = `${pixelSize}px`;
@@ -143,7 +146,7 @@
                 element.style.top = `${token.y * cellSize()}px`;
                 element.style.fontSize = `${Math.max(13, pixelSize * 0.3)}px`;
                 if (!token.image) element.innerText = token.name.substring(0, 2).toUpperCase();
-                element.title = `${token.name} (${token.size}x${token.size}) - Doppio click per modificare`;
+                element.title = `${token.name} (${token.size}x${token.size})${token.hidden ? ' - Nascosta ai Player' : ''} - Doppio click per modificare`;
                 element.addEventListener('pointerdown', event => {
                     if (event.button !== 0) return;
                     event.stopPropagation();
@@ -192,7 +195,7 @@
                             </summary>
                             <div id="token-palette-adventurers" class="flex max-h-48 flex-col gap-1.5 overflow-y-auto px-2 pb-2 pr-3"><p class="empty-category-msg py-2 text-center italic text-slate-500">Nessun avventuriero</p></div>
                         </details>
-                        <details class="rounded-md border border-slate-700 bg-slate-900/60">
+                        <details id="enemy-token-section" class="rounded-md border border-slate-700 bg-slate-900/60">
                             <summary class="flex cursor-pointer select-none items-center justify-between px-2.5 py-2 font-semibold text-slate-300 hover:text-white">
                                 <span>Nemici</span><span id="enemy-token-count" class="text-[10px] text-slate-500">0</span>
                             </summary>
@@ -226,7 +229,7 @@
                         <h3 class="mb-3 text-sm font-bold text-white">Modifica Pedina</h3>
                         <div class="mb-4 space-y-3">
                             <div><label for="edit-token-name" class="mb-1 block text-slate-400">Nome</label><input type="text" id="edit-token-name" class="w-full rounded border border-slate-600 bg-slate-900 px-2.5 py-1.5 text-white focus:border-indigo-500 focus:outline-none"></div>
-                            <div><label for="edit-token-category" class="mb-1 block text-slate-400">Categoria</label><select id="edit-token-category" class="w-full rounded border border-slate-600 bg-slate-900 px-2 py-1.5 text-white focus:border-indigo-500 focus:outline-none"><option value="avventurieri">Avventurieri</option><option value="nemici">Nemici</option></select></div>
+                            <div id="edit-token-category-field"><label for="edit-token-category" class="mb-1 block text-slate-400">Categoria</label><select id="edit-token-category" class="w-full rounded border border-slate-600 bg-slate-900 px-2 py-1.5 text-white focus:border-indigo-500 focus:outline-none"><option value="avventurieri">Avventurieri</option><option value="nemici">Nemici</option></select></div>
                             <div class="flex gap-2"><div class="w-16"><label for="edit-token-color" class="mb-1 block text-slate-400">Colore</label><input type="color" id="edit-token-color" class="h-8 w-full cursor-pointer rounded border border-slate-600 bg-slate-900 p-0.5"></div><div class="flex-1"><label for="edit-token-size" class="mb-1 block text-slate-400">Taglia (Quadretti)</label><select id="edit-token-size" class="h-8 w-full rounded border border-slate-600 bg-slate-900 px-2 text-white focus:border-indigo-500 focus:outline-none"><option value="1">Media (1x1)</option><option value="2">Grande (2x2)</option><option value="3">Enorme (3x3)</option><option value="4">Mastodontica (4x4)</option></select></div></div>
                             <div><div class="mb-1 flex items-center justify-between"><label for="edit-token-opacity" class="text-slate-400">Opacità colore</label><span id="edit-token-opacity-value" class="text-slate-300">100%</span></div><input type="range" id="edit-token-opacity" min="0" max="100" value="100" class="w-full accent-indigo-500"></div>
                             <div><label for="edit-token-image" class="mb-1 block text-slate-400">Immagine pedina</label><div class="flex items-center gap-2"><input type="file" id="edit-token-image" accept="image/*" class="min-w-0 flex-1 text-[10px] text-slate-300 file:mr-2 file:rounded file:border-0 file:bg-slate-700 file:px-2 file:py-1 file:text-slate-200"><img id="edit-token-image-preview" class="hidden h-9 w-9 rounded-full border border-white/50 object-cover" alt="Anteprima immagine pedina"><button id="btn-clear-edit-image" type="button" class="text-slate-400 hover:text-rose-300">Rimuovi</button></div></div>
@@ -285,7 +288,8 @@
                     size: parseInt($('token-size').value, 10),
                     category: $('token-category').value,
                     opacity: 100,
-                    image: this.pendingTokenImage
+                    image: this.pendingTokenImage,
+                    hidden: false
                 });
                 $('token-name').value = '';
                 this.pendingTokenImage = null;
@@ -388,7 +392,7 @@
                     if (event.target.closest('button')) return;
                     if (window.matchMedia('(pointer: coarse)').matches) this.placeTokenAtMapCenter(template);
                 });
-                item.innerHTML = `<div class="palette-avatar w-7 h-7 rounded-full border border-white/60 flex items-center justify-center text-[10px] font-bold shadow shrink-0">${template.name.substring(0, 2).toUpperCase()}</div><div class="flex-1 overflow-hidden"><p class="font-semibold text-white truncate text-xs">${template.name}</p><p class="text-[10px] text-slate-400 leading-tight">${template.size}x${template.size} quadretti</p></div><button class="btn-toggle-token-visibility p-1 text-slate-400 hover:text-white" type="button"></button><button class="btn-edit-pal p-1 text-slate-400 hover:text-white" title="Modifica pedina" type="button">✏️</button><button class="btn-del-pal p-1 text-slate-400 hover:text-rose-400" title="Elimina dalla lista" type="button">🗑️</button>`;
+                item.innerHTML = `<div class="palette-avatar w-7 h-7 rounded-full border border-white/60 flex items-center justify-center text-[10px] font-bold shadow shrink-0">${template.name.substring(0, 2).toUpperCase()}</div><div class="flex-1 overflow-hidden"><p class="font-semibold text-white truncate text-xs">${template.name}</p><p class="text-[10px] text-slate-400 leading-tight">${template.size}x${template.size} quadretti</p></div><button class="btn-toggle-token-visibility p-1 text-slate-400 hover:text-white disabled:cursor-not-allowed disabled:opacity-40" type="button"></button><button class="btn-edit-pal p-1 text-slate-400 hover:text-white" title="Modifica pedina" type="button">✏️</button><button class="btn-del-pal p-1 text-slate-400 hover:text-rose-400" title="Elimina dalla lista" type="button">🗑️</button>`;
                 const avatar = item.querySelector('.palette-avatar');
                 avatar.style.backgroundColor = colorWithOpacity(template.color, template.opacity ?? 100);
                 if (template.image) {
@@ -402,18 +406,52 @@
                 const visibilityButton = item.querySelector('.btn-toggle-token-visibility');
                 const updateVisibilityButton = () => {
                     const linked = linkedTokens();
-                    const allHidden = linked.length > 0 && linked.every(token => token.hidden);
+                    const allHidden = linked.length > 0 ? linked.every(token => token.hidden) : Boolean(template.hidden);
+                    const isPlayerMode = this.context.isPlayerMode();
+                    template.hidden = allHidden;
+                    if (allHidden && linked.length) {
+                        const origins = new Set(linked.map(token => token.hiddenBy || 'master'));
+                        template.hiddenBy = origins.size === 1 ? origins.values().next().value : 'master';
+                    } else if (!allHidden) template.hiddenBy = null;
+                    const canPlayerToggle = linked.some(token => !(token.hidden && (token.hiddenBy || 'master') === 'master'))
+                        || (!linked.length && !(template.hidden && (template.hiddenBy || 'master') === 'master'));
+                    visibilityButton.disabled = isPlayerMode && !canPlayerToggle;
                     visibilityButton.textContent = allHidden ? '🙈' : '👁️';
-                    visibilityButton.title = allHidden ? 'Mostra le pedine sulla mappa' : 'Nascondi le pedine sulla mappa';
+                    visibilityButton.title = isPlayerMode
+                        ? (canPlayerToggle
+                            ? (allHidden ? 'Mostra normalmente i tuoi avventurieri' : 'Attenua i tuoi avventurieri sulla mappa')
+                            : 'Il Master ha nascosto questa pedina')
+                        : (allHidden ? 'Mostra le pedine ai Player (anche quelle future)' : 'Nascondi le pedine ai Player (anche quelle future)');
                     visibilityButton.setAttribute('aria-label', visibilityButton.title);
                 };
                 updateVisibilityButton();
                 visibilityButton.addEventListener('click', event => {
                     event.stopPropagation();
                     const linked = linkedTokens();
-                    if (!linked.length) return showToast('Questa pedina non è ancora stata posizionata sulla mappa.');
-                    const shouldHide = linked.some(token => !token.hidden);
-                    linked.forEach(token => { token.hidden = shouldHide; });
+                    const isPlayerMode = this.context.isPlayerMode();
+                    if (isPlayerMode) {
+                        const playerControlledTokens = linked.filter(token => !(token.hidden && (token.hiddenBy || 'master') === 'master'));
+                        if (!playerControlledTokens.length && template.hidden && (template.hiddenBy || 'master') === 'master') return;
+                        const shouldHide = playerControlledTokens.length
+                            ? playerControlledTokens.some(token => !(token.hidden && token.hiddenBy === 'player'))
+                            : !template.hidden;
+                        template.hidden = shouldHide;
+                        template.hiddenBy = shouldHide ? 'player' : null;
+                        playerControlledTokens.forEach(token => {
+                            token.hidden = shouldHide;
+                            token.hiddenBy = template.hiddenBy;
+                        });
+                    } else {
+                        const shouldHide = linked.length > 0
+                            ? linked.some(token => !token.hidden)
+                            : !template.hidden;
+                        template.hidden = shouldHide;
+                        template.hiddenBy = shouldHide ? 'master' : null;
+                        linked.forEach(token => {
+                            token.hidden = shouldHide;
+                            token.hiddenBy = template.hiddenBy;
+                        });
+                    }
                     renderBoardTokens();
                     updateVisibilityButton();
                 });
@@ -453,6 +491,7 @@
             const item = type === 'palette' ? state.palette.find(entry => entry.id === id) : state.boardTokens.find(entry => entry.id === id);
             if (!item) return;
             state.editing = { type, id };
+            document.getElementById('edit-token-category-field').classList.toggle('hidden', this.context.isPlayerMode());
             document.getElementById('edit-token-name').value = item.name;
             document.getElementById('edit-token-color').value = item.color;
             document.getElementById('edit-token-category').value = item.category === 'nemici' ? 'nemici' : 'avventurieri';
@@ -489,7 +528,13 @@
                 if (item) {
                     const previous = { name: item.name, color: item.color, size: item.size };
                     const linked = state.boardTokens.filter(token => token.templateId === item.id || (!token.templateId && token.name === previous.name && token.color === previous.color && token.size === previous.size));
-                    Object.assign(item, { name, color, size, category: document.getElementById('edit-token-category').value, opacity });
+                    Object.assign(item, {
+                        name,
+                        color,
+                        size,
+                        ...(this.context.isPlayerMode() ? {} : { category: document.getElementById('edit-token-category').value }),
+                        opacity
+                    });
                     if (this.editImageChanged) item.image = this.pendingEditImage;
                     linked.forEach(token => {
                         token.color = color;

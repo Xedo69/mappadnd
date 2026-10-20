@@ -18,7 +18,7 @@
             </div>
             <p class="mb-2 text-xs font-semibold uppercase tracking-[.22em] text-indigo-300">Mappa Tattica</p>
             <h1 class="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">Accedi al tuo cloud</h1>
-            <p class="mx-auto mt-3 max-w-sm text-sm leading-6 text-slate-400">Inserisci le credenziali per caricare la mappa e i dati salvati nel tuo account.</p>
+            <p class="mx-auto mt-3 max-w-sm text-sm leading-6 text-slate-400">Accedi per creare le tue sessioni, riprendere le mappe e unirti ai tavoli dei tuoi amici.</p>
         </div>
 
         <section class="rounded-2xl border border-slate-700/80 bg-slate-900/90 p-5 shadow-2xl shadow-black/30 backdrop-blur sm:p-7">
@@ -33,7 +33,7 @@
                 </label>
                 <p id="login-status" class="hidden rounded-xl border px-3 py-2.5 text-sm leading-5" role="status" aria-live="polite"></p>
                 <button id="login-submit" type="submit" class="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 font-semibold text-white shadow-lg shadow-indigo-950/40 transition hover:bg-indigo-500 active:scale-[.99] disabled:cursor-wait disabled:opacity-60">
-                    <span>Accedi e carica la mappa</span>
+                    <span>Accedi alle sessioni</span>
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-6-6 6 6-6 6"/></svg>
                 </button>
                 <button id="signup-submit" type="button" class="h-11 w-full rounded-xl border border-slate-700 bg-slate-800/70 px-4 text-sm font-medium text-slate-200 transition hover:border-slate-600 hover:bg-slate-800 disabled:cursor-wait disabled:opacity-60">Crea un nuovo account</button>
@@ -89,6 +89,11 @@
         let selectedEntryMode = 'account';
 
         function chooseRole(mode = 'account') {
+            if (mode === 'account') {
+                try { sessionStorage.setItem(LOGIN_GATE_KEY, 'account'); } catch (error) {}
+                window.location.replace('./sessions.html');
+                return;
+            }
             selectedEntryMode = mode;
             setBusy(false);
             form.classList.add('hidden');
@@ -132,9 +137,14 @@
             if (new URLSearchParams(window.location.search).get('choose-role') === '1') {
                 cloudClient.auth.getSession().then(({ data, error }) => {
                     if (error) throw error;
-                    if (data.session) chooseRole();
+                    if (data.session) chooseRole('account');
                     else showStatus('La sessione è scaduta. Accedi di nuovo per scegliere il ruolo.');
                 }).catch(error => showStatus(error.message || 'Impossibile verificare la sessione cloud.'));
+            } else if (!confirmationLink) {
+                cloudClient.auth.getSession().then(({ data, error }) => {
+                    if (error) throw error;
+                    if (data.session) chooseRole('account');
+                }).catch(error => console.warn('Verifica della sessione esistente non riuscita:', error));
             }
 
             form.addEventListener('submit', async event => {

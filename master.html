@@ -290,6 +290,7 @@
         let cloudUser = null;
         let cloudChannel = null;
         let cloudSaveTimer = null;
+        const CLOUD_SAVE_DEBOUNCE_MS = 250;
         let lastCloudStateJson = null;
         let applyingCloudState = false;
         let diceBroadcastReady = false;
@@ -297,6 +298,7 @@
         let diceOverlayTimer = null;
         const diceSenderId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
         const pageParams = new URLSearchParams(window.location.search);
+        const activeGameSessionId = pageParams.get('session');
         let storedRole = null;
         try { storedRole = sessionStorage.getItem('dnd-map-role'); } catch (error) {}
         const playerMode = pageParams.get('mode') === 'player' || pageParams.get('role') === 'player' || storedRole === 'player';
@@ -344,6 +346,11 @@
 
             if (approvedEntry === 'demo') {
                 return 'demo';
+            }
+
+            if (approvedEntry === 'account' && !activeGameSessionId) {
+                window.location.replace('./sessions.html');
+                return false;
             }
 
             if (approvedEntry !== 'account' || !cloudEnabled) {
@@ -482,7 +489,7 @@
             persistLocalState();
             if (!cloudUser || applyingCloudState) return;
             clearTimeout(cloudSaveTimer);
-            cloudSaveTimer = setTimeout(saveStateToCloud, 900);
+            cloudSaveTimer = setTimeout(saveStateToCloud, CLOUD_SAVE_DEBOUNCE_MS);
         }
 
         youtubeMusic.addEventListener('music-settings-change', event => {
@@ -638,9 +645,10 @@
             document.getElementById('cloud-account-email').textContent = user?.email || '';
         }
 
-        function applyCloudState(saved) {
+        function applyCloudState(saved, { preserveView = false } = {}) {
             if (!saved || typeof saved !== 'object') return;
             applyingCloudState = true;
+            const previousView = preserveView ? { ...state.view } : null;
             try {
                 state.palette = Array.isArray(saved.palette) ? saved.palette : [];
                 state.boardTokens = Array.isArray(saved.boardTokens) ? saved.boardTokens : [];
@@ -669,7 +677,12 @@
                 renderBoardTokens();
                 renderSavedMaps();
                 applyMapSettings();
-                centerMap();
+                if (previousView) {
+                    state.view = previousView;
+                    updateTransform();
+                } else {
+                    centerMap();
+                }
                 persistLocalState();
             } finally {
                 applyingCloudState = false;
@@ -681,6 +694,44 @@
             if (cloudUser?.id === user.id) return;
             cloudUser = user;
             renderCloudAccount(user);
+
+            if (activeGameSessionId) {
+                setCloudStatus('Carico la sessione…');
+                const { data: gameSession, error: sessionError } = await cloudClient
+                    .from('game_sessions').select('id,name,owner_id,state')
+                    .eq('id', activeGameSessionId).maybeSingle();
+                if (sessionError) throw sessionError;
+                if (!gameSession) throw new Error('Non hai accesso a questa sessione o non esiste più.');
+                document.getElementById('cloud-status').textContent = `Sessione: ${gameSession.name}`;
+                const roleButton = document.getElementById('cloud-change-role');
+                roleButton.textContent = '← Torna alle sessioni';
+                if (gameSession.state) {
+                    lastCloudStateJson = JSON.stringify(gameSession.state);
+                    applyCloudState(gameSession.state);
+                }
+                if (cloudChannel) await cloudClient.removeChannel(cloudChannel);
+                cloudChannel = cloudClient.channel(`session:${activeGameSessionId}`, { config: { private: true } })
+                    .on('broadcast', { event: 'dice_roll' }, ({ payload }) => handleIncomingDiceRoll(payload))
+                    .on('postgres_changes', {
+                        event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${activeGameSessionId}`
+                    }, payload => {
+                        const incoming = payload.new?.state;
+                        if (!incoming) return;
+                        const incomingJson = JSON.stringify(incoming);
+                        if (incomingJson === lastCloudStateJson) return;
+                        clearTimeout(cloudSaveTimer);
+                        lastCloudStateJson = incomingJson;
+                        applyCloudState(incoming, { preserveView: true });
+                        setCloudStatus(`Aggiornamento ricevuto · ${gameSession.name}`);
+                    })
+                    .subscribe(status => {
+                        const connected = status === 'SUBSCRIBED';
+                        setDiceBroadcastReady(connected);
+                        setCloudConnectionStatus(connected);
+                    });
+                return;
+            }
+
             setCloudStatus('Carico i dati salvati online…');
 
             const { data, error } = await cloudClient
@@ -718,7 +769,7 @@
                     if (incomingJson === lastCloudStateJson) return;
                     clearTimeout(cloudSaveTimer);
                     lastCloudStateJson = incomingJson;
-                    applyCloudState(incoming);
+                    applyCloudState(incoming, { preserveView: true });
                     setCloudStatus('Aggiornamento ricevuto da un altro dispositivo.');
                 })
                 .subscribe(status => {
@@ -731,6 +782,37 @@
         async function saveStateToCloud() {
             if (!cloudUser || !cloudClient || applyingCloudState) return;
             let saved = getPersistedState();
+
+            if (activeGameSessionId) {
+                if (playerMode) {
+                    const { data, error } = await cloudClient.rpc('save_player_session_state', {
+                        p_session_id: activeGameSessionId,
+                        p_state: saved,
+                        p_deleted_token_ids: [...playerDeletedTokenIds]
+                    });
+                    if (error) {
+                        console.error('Errore sincronizzazione avventurieri:', error);
+                        setCloudStatus('Salvataggio degli avventurieri non riuscito.', true);
+                        return;
+                    }
+                    saved = data || saved;
+                    playerDeletedTokenIds.clear();
+                    if (data) applyCloudState(data, { preserveView: true });
+                } else {
+                    const { error } = await cloudClient.from('game_sessions')
+                        .update({ state: saved, updated_at: new Date().toISOString() })
+                        .eq('id', activeGameSessionId);
+                    if (error) {
+                        console.error('Errore sincronizzazione sessione:', error);
+                        setCloudStatus('Salvataggio della sessione non riuscito.', true);
+                        return;
+                    }
+                }
+                lastCloudStateJson = JSON.stringify(saved);
+                setCloudStatus('Sessione salvata online.');
+                return;
+            }
+
             if (playerMode) {
                 const { data, error: fetchError } = await cloudClient.from('map_states').select('state').eq('user_id', cloudUser.id).maybeSingle();
                 if (fetchError) { setCloudStatus('Impossibile aggiornare gli avventurieri online.', true); return; }
@@ -847,7 +929,7 @@
             });
 
             document.getElementById('cloud-change-role').addEventListener('click', () => {
-                window.location.replace('./login.html?choose-role=1');
+                window.location.replace(activeGameSessionId ? './sessions.html' : './login.html?choose-role=1');
             });
 
             document.getElementById('cloud-export-data').addEventListener('click', exportMapBackup);

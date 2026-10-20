@@ -10,7 +10,12 @@
     <iframe id="player-map" title="Mappa giocatore"></iframe>
     <script>
         const entry = new URLSearchParams(window.location.search).get('entry') || 'account';
-        document.getElementById('player-map').src = `./master.html?mode=player&role=player&entry=${encodeURIComponent(entry)}&v=20261017-3`;
+        const params = new URLSearchParams(window.location.search);
+        params.set('mode', 'player');
+        params.set('role', 'player');
+        params.set('entry', entry);
+        if (!params.has('v')) params.set('v', 'sessions-1');
+        document.getElementById('player-map').src = `./master.html?${params.toString()}`;
     </script>
 </body>
 </html>
