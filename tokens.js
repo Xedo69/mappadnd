@@ -57,6 +57,7 @@
             });
             viewport.addEventListener('drop', event => {
                 event.preventDefault();
+                if (this.context.isReadOnlyMode?.()) return;
                 const data = event.dataTransfer.getData('text/plain');
                 if (!data) return;
                 try {
@@ -87,6 +88,7 @@
         }
 
         moveDraggedToken(event) {
+            if (this.context.isReadOnlyMode?.()) return;
             if (!this.draggedToken) return;
             const element = document.getElementById(this.draggedToken.id);
             if (!element) return;
@@ -100,6 +102,11 @@
         }
 
         finishTokenDrag() {
+            if (this.context.isReadOnlyMode?.()) {
+                this.draggedToken = null;
+                this.tokenDragMoved = false;
+                return;
+            }
             if (!this.draggedToken) return;
             const { state } = this.context;
             const element = document.getElementById(this.draggedToken.id);
@@ -123,6 +130,7 @@
         renderBoardTokens() {
             const { state, mapContainer, cellSize, colorWithOpacity, saveTokens } = this.context;
             const isPlayerMode = this.context.isPlayerMode();
+            const isReadOnlyMode = this.context.isReadOnlyMode?.() || false;
             mapContainer.querySelectorAll('.token').forEach(element => element.remove());
             state.boardTokens.forEach(token => {
                 if (token.hidden && isPlayerMode && token.hiddenBy !== 'player') return;
@@ -148,6 +156,7 @@
                 if (!token.image) element.innerText = token.name.substring(0, 2).toUpperCase();
                 element.title = `${token.name} (${token.size}x${token.size})${token.hidden ? ' - Nascosta ai Player' : ''} - Doppio click per modificare`;
                 element.addEventListener('pointerdown', event => {
+                    if (isReadOnlyMode) return;
                     if (event.button !== 0) return;
                     event.stopPropagation();
                     this.draggedToken = token;
@@ -161,11 +170,13 @@
                 });
                 element.addEventListener('dblclick', event => {
                     event.stopPropagation();
+                    if (isReadOnlyMode) return;
                     this.openEditModal('board', token.id);
                 });
                 element.addEventListener('contextmenu', event => {
                     event.preventDefault();
                     event.stopPropagation();
+                    if (isReadOnlyMode) return;
                     if (!window.confirm(`Eliminare la pedina "${token.name}" dalla mappa?`)) return;
                     state.boardTokens = state.boardTokens.filter(entry => entry.id !== token.id);
                     this.renderBoardTokens();

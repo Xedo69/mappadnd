@@ -15,7 +15,7 @@
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./style.css?v=viewer-1">
 </head>
 <body class="master-page auth-checking flex h-screen w-screen bg-slate-950 font-sans">
     <div id="auth-loading" role="status" aria-live="polite">Verifico l’accesso…</div>
@@ -192,6 +192,7 @@
 
     <!-- Area Mappa -->
     <main class="flex-1 relative bg-slate-950 overflow-hidden" id="map-viewport">
+        <button id="viewer-exit" type="button" class="viewer-exit" aria-label="Torna alle sessioni">← Sessioni</button>
         <button id="btn-open-menu" type="button" aria-label="Apri il menu di modifica" aria-controls="map-controls" class="hidden">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
             <span>Menu</span>
@@ -267,7 +268,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js?v=mapfit1"></script>
     <script src="./youtube-music.js"></script>
-    <script src="./tokens.js?v=token-fixed-20261017-2"></script>
+    <script src="./tokens.js?v=viewer-1"></script>
     <script>
         const state = {
             map: { cols: 20, rows: 15, widthPx: 800, heightPx: 600, bg: '#334155', showGrid: true, cellSize: 40, snapToGrid: true, autoFitImage: true },
@@ -302,7 +303,9 @@
         const activeGameSessionId = pageParams.get('session');
         let storedRole = null;
         try { storedRole = sessionStorage.getItem('dnd-map-role'); } catch (error) {}
-        const playerMode = pageParams.get('mode') === 'player' || pageParams.get('role') === 'player' || storedRole === 'player';
+        const requestedRole = pageParams.get('role');
+        const viewerMode = requestedRole === 'viewer' || (!requestedRole && storedRole === 'viewer');
+        const playerMode = !viewerMode && (pageParams.get('mode') === 'player' || requestedRole === 'player' || (!requestedRole && storedRole === 'player'));
         const playerDeletedTokenIds = new Set();
 
         const viewport = document.getElementById('map-viewport');
@@ -330,6 +333,7 @@
             saveTokens: () => saveTokens(),
             showToast: message => showToast(message),
             isPlayerMode: () => playerMode,
+            isReadOnlyMode: () => viewerMode,
             markPlayerTokenDeleted: id => playerDeletedTokenIds.add(id)
         });
 
@@ -368,7 +372,7 @@
                 const { data, error } = sessionResult;
                 if (error || !data.session) throw error || new Error('Sessione non valida');
                 authorizedCloudSession = data.session;
-                return playerMode ? 'player' : 'account';
+                return viewerMode ? 'viewer' : playerMode ? 'player' : 'account';
             } catch (error) {
                 try { sessionStorage.removeItem(LOGIN_GATE_KEY); } catch (storageError) {}
                 await cloudClient.auth.signOut({ scope: 'local' }).catch(() => {});
@@ -381,6 +385,7 @@
             const entryMode = await authorizeMapEntry();
             if (!entryMode) return;
             document.body.classList.toggle('player-mode', entryMode === 'player');
+            document.body.classList.toggle('viewer-mode', entryMode === 'viewer');
             tokenManager.setPlayerMode?.(entryMode === 'player');
             document.getElementById('auth-loading').textContent = entryMode === 'player'
                 ? 'Ripristino la sessione di gioco…'
@@ -490,6 +495,7 @@
         }
 
         function saveTokens() {
+            if (viewerMode) return;
             persistLocalState();
             if (!cloudUser || applyingCloudState) return;
             clearTimeout(cloudSaveTimer);
@@ -521,7 +527,7 @@
         const DICE_SIDES = new Set([4, 6, 8, 10, 12, 20, 100]);
 
         function setDiceBroadcastReady(ready) {
-            diceBroadcastReady = Boolean(ready && cloudUser && cloudChannel);
+            diceBroadcastReady = Boolean(ready && !viewerMode && cloudUser && cloudChannel);
             const button = document.getElementById('dice-roll-public');
             const status = document.getElementById('dice-public-status');
             if (!button || !status) return;
@@ -718,9 +724,9 @@
                     applyCloudState(sessionState);
                 }
                 if (cloudChannel) await cloudClient.removeChannel(cloudChannel);
-                cloudChannel = cloudClient.channel(`session:${activeGameSessionId}`, { config: { private: true } })
-                    .on('broadcast', { event: 'dice_roll' }, ({ payload }) => handleIncomingDiceRoll(payload))
-                    .on('broadcast', { event: 'session_state_updated' }, async () => {
+                cloudChannel = cloudClient.channel(`session:${activeGameSessionId}`, { config: { private: true } });
+                if (!viewerMode) cloudChannel.on('broadcast', { event: 'dice_roll' }, ({ payload }) => handleIncomingDiceRoll(payload));
+                cloudChannel.on('broadcast', { event: 'session_state_updated' }, async () => {
                         const { data: incoming, error } = await cloudClient.rpc('get_game_session_state', {
                             p_session_id: activeGameSessionId
                         });
@@ -734,8 +740,8 @@
                         lastCloudStateJson = incomingJson;
                         applyCloudState(incoming, { preserveView: true });
                         setCloudStatus(`Aggiornamento ricevuto · ${gameSession.name}`);
-                    })
-                    .subscribe(status => {
+                    });
+                cloudChannel.subscribe(status => {
                         const connected = status === 'SUBSCRIBED';
                         setDiceBroadcastReady(connected);
                         setCloudConnectionStatus(connected);
@@ -791,7 +797,7 @@
         }
 
         async function saveStateToCloud() {
-            if (!cloudUser || !cloudClient || applyingCloudState) return;
+            if (viewerMode || !cloudUser || !cloudClient || applyingCloudState) return;
             let saved = getPersistedState();
 
             if (activeGameSessionId) {
@@ -937,6 +943,9 @@
 
             document.getElementById('cloud-change-role').addEventListener('click', () => {
                 window.location.replace(activeGameSessionId ? './sessions.html' : './login.html?choose-role=1');
+            });
+            document.getElementById('viewer-exit').addEventListener('click', () => {
+                window.location.replace('./sessions.html');
             });
 
             document.getElementById('cloud-export-data').addEventListener('click', exportMapBackup);

@@ -14,10 +14,16 @@ create table if not exists public.game_sessions (
 create table if not exists public.game_session_members (
     session_id uuid not null references public.game_sessions(id) on delete cascade,
     user_id uuid not null references auth.users(id) on delete cascade,
-    role text not null default 'player' check (role in ('player')),
+    role text not null default 'player' check (role in ('player', 'viewer')),
     joined_at timestamptz not null default now(),
     primary key (session_id, user_id)
 );
+
+-- Aggiorna anche le installazioni che hanno già la tabella con il solo ruolo player.
+alter table public.game_session_members
+    drop constraint if exists game_session_members_role_check;
+alter table public.game_session_members
+    add constraint game_session_members_role_check check (role in ('player', 'viewer'));
 
 create index if not exists game_sessions_owner_id_idx
     on public.game_sessions(owner_id);
@@ -84,7 +90,8 @@ create policy "users can see their session memberships"
     on public.game_session_members for select to authenticated
     using (user_id = (select auth.uid()));
 
-create or replace function public.join_game_session(p_invite_code text)
+drop function if exists public.join_game_session(text);
+create or replace function public.join_game_session(p_invite_code text, p_role text)
 returns uuid
 language plpgsql
 security definer
@@ -98,6 +105,10 @@ begin
         raise exception 'Devi accedere per unirti a una sessione.' using errcode = '42501';
     end if;
 
+    if p_role not in ('player', 'viewer') then
+        raise exception 'Modalità di accesso non valida.' using errcode = '22023';
+    end if;
+
     select s.id into v_session_id
     from public.game_sessions s
     where s.invite_code = upper(trim(p_invite_code));
@@ -107,17 +118,17 @@ begin
     end if;
 
     insert into public.game_session_members (session_id, user_id, role)
-    values (v_session_id, v_user_id, 'player')
-    on conflict (session_id, user_id) do nothing;
+    values (v_session_id, v_user_id, p_role)
+    on conflict (session_id, user_id) do update set role = excluded.role;
 
     return v_session_id;
 end;
 $$;
 
-revoke all on function public.join_game_session(text) from public, anon;
-grant execute on function public.join_game_session(text) to authenticated;
+revoke all on function public.join_game_session(text, text) from public, anon;
+grant execute on function public.join_game_session(text, text) to authenticated;
 
--- Lo stato completo è restituito al Master; i Player ricevono solo elementi visibili.
+-- Lo stato completo è restituito al Master; gli altri membri ricevono solo elementi visibili.
 create or replace function public.get_game_session_state(p_session_id uuid)
 returns jsonb
 language plpgsql
@@ -361,7 +372,8 @@ create policy "session members can receive realtime broadcasts"
     );
 
 drop policy if exists "session members can send realtime broadcasts" on realtime.messages;
-create policy "session members can send realtime broadcasts"
+drop policy if exists "players and owners can send realtime broadcasts" on realtime.messages;
+create policy "players and owners can send realtime broadcasts"
     on realtime.messages for insert to authenticated
     with check (
         extension = 'broadcast'
@@ -370,7 +382,7 @@ create policy "session members can send realtime broadcasts"
             where realtime.topic() = 'session:' || s.id::text
               and (s.owner_id = (select auth.uid()) or exists (
                   select 1 from public.game_session_members m
-                  where m.session_id = s.id and m.user_id = (select auth.uid())
+                  where m.session_id = s.id and m.user_id = (select auth.uid()) and m.role = 'player'
               ))
         )
     );

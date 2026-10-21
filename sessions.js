@@ -31,7 +31,7 @@
 
     function openSession(session, role) {
         const params = new URLSearchParams({ entry: 'account', role, session: session.id, v: 'sessions-1' });
-        const target = role === 'master' ? './master.html' : './player.html';
+        const target = role === 'player' ? './player.html' : './master.html';
         window.location.assign(`${target}?${params.toString()}`);
     }
 
@@ -45,11 +45,17 @@
         title.textContent = session.name || 'Sessione senza nome';
         const subtitle = document.createElement('p');
         subtitle.className = 'mt-1 text-xs text-slate-400';
-        subtitle.textContent = role === 'master' ? 'La gestisci come Master' : 'Sei invitato come Player';
+        const roleLabels = {
+            master: { subtitle: 'La gestisci come Master', badge: 'MASTER' },
+            player: { subtitle: 'Partecipi come Player', badge: 'PLAYER' },
+            viewer: { subtitle: 'Accesso in sola visualizzazione', badge: 'VISUALIZZA' }
+        };
+        const roleInfo = roleLabels[role] || roleLabels.player;
+        subtitle.textContent = roleInfo.subtitle;
         content.append(title, subtitle);
         const badge = document.createElement('span');
-        badge.className = `session-role ${role === 'master' ? 'session-role-master' : 'session-role-player'}`;
-        badge.textContent = role === 'master' ? 'MASTER' : 'PLAYER';
+        badge.className = `session-role session-role-${role in roleLabels ? role : 'player'}`;
+        badge.textContent = roleInfo.badge;
 
         const top = document.createElement('div');
         top.className = 'flex items-start justify-between gap-3';
@@ -130,7 +136,10 @@
             list.append(empty);
             return;
         }
-        sessions.forEach(session => list.append(renderSessionCard(session, session.role === 'master' ? 'master' : 'player')));
+        sessions.forEach(session => {
+            const role = ['master', 'player', 'viewer'].includes(session.role) ? session.role : 'player';
+            list.append(renderSessionCard(session, role));
+        });
     }
 
     async function initialize() {
@@ -183,14 +192,15 @@
     document.getElementById('join-session-form').addEventListener('submit', async event => {
         event.preventDefault();
         const code = document.getElementById('session-invite-code').value.trim().toUpperCase();
+        const role = document.getElementById('session-join-role').value;
         if (!code || !currentUser) return;
         setBusy(true);
         try {
-            const { data, error } = await client.rpc('join_game_session', { p_invite_code: code });
+            const { data, error } = await client.rpc('join_game_session', { p_invite_code: code, p_role: role });
             if (error) throw error;
             const sessionId = typeof data === 'string' ? data : data?.id;
             if (!sessionId) throw new Error('Il codice è stato accettato, ma non riesco a identificare la sessione.');
-            openSession({ id: sessionId }, 'player');
+            openSession({ id: sessionId }, role);
         } catch (error) {
             console.error('Accesso alla sessione non riuscito:', error);
             showStatus(error.message || 'Codice non valido o impossibile unirsi alla sessione.');

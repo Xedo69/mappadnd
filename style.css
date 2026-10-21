@@ -45,6 +45,7 @@ body.sessions-page {
 .sessions-page .session-role { flex: none; padding: .3rem .5rem; border: 1px solid; border-radius: 999px; font-size: .58rem; font-weight: 800; letter-spacing: .1em; }
 .sessions-page .session-role-master { border-color: rgba(129, 140, 248, .35); background: rgba(79, 70, 229, .15); color: #c7d2fe; }
 .sessions-page .session-role-player { border-color: rgba(52, 211, 153, .3); background: rgba(5, 150, 105, .12); color: #a7f3d0; }
+.sessions-page .session-role-viewer { border-color: rgba(56, 189, 248, .3); background: rgba(2, 132, 199, .12); color: #bae6fd; }
 .sessions-page .session-open-button { width: 100%; min-height: 2.7rem; margin-top: 1rem; border: 1px solid rgba(100, 116, 139, .5); border-radius: .7rem; background: rgba(30, 41, 59, .75); color: #e2e8f0; font-size: .8rem; font-weight: 700; transition: background .15s, border-color .15s; }
 .sessions-page .session-open-button:hover { border-color: rgba(129, 140, 248, .5); background: rgba(79, 70, 229, .18); }
 .sessions-page .session-empty { grid-column: 1 / -1; padding: 1.4rem; border: 1px dashed rgba(71, 85, 105, .65); border-radius: .9rem; color: #94a3b8; text-align: center; font-size: .84rem; line-height: 1.5; }
@@ -214,6 +215,28 @@ body.credits-page {
         :scope.player-mode #enemy-token-section { display: none !important; }
         :scope.player-mode #map-controls { gap: 1rem; }
         :scope.player-mode #map-sidebar-header h1::after { content: ' · Player'; color: #6ee7b7; font-size: .7rem; }
+        :scope.viewer-mode #map-sidebar { display: none !important; }
+        :scope.viewer-mode #btn-open-menu,
+        :scope.viewer-mode #btn-open-dice,
+        :scope.viewer-mode #dice-dialog-backdrop,
+        :scope.viewer-mode #dice-roll-overlay { display: none !important; }
+        :scope.viewer-mode .token { pointer-events: none; cursor: default; }
+        :scope:not(.viewer-mode) .viewer-exit { display: none; }
+        .viewer-exit {
+            position: absolute;
+            z-index: 30;
+            top: max(1rem, env(safe-area-inset-top));
+            right: max(1rem, env(safe-area-inset-right));
+            border: 1px solid rgba(148, 163, 184, .35);
+            border-radius: 999px;
+            background: rgba(15, 23, 42, .88);
+            padding: .55rem .9rem;
+            color: #e2e8f0;
+            font: 600 .75rem Inter, sans-serif;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .3);
+            backdrop-filter: blur(8px);
+        }
+        .viewer-exit:hover { background: rgba(30, 41, 59, .96); }
 
         /* Use the visible mobile viewport when browser chrome expands or collapses. */
         @supports (height: 100dvh) {

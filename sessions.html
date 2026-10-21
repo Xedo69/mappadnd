@@ -7,7 +7,7 @@
     <title>Le mie sessioni · Mappa Tattica D&amp;D</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./style.css?v=viewer-1">
 </head>
 <body class="sessions-page min-h-screen text-slate-100">
     <main class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -36,7 +36,12 @@
                 <div class="mb-4 flex items-center gap-3"><span class="session-icon session-icon-green">↗</span><div><h2 class="font-bold text-white">Partecipa a una sessione</h2><p class="text-xs text-slate-400">Inserisci il codice d’invito ricevuto dal Master.</p></div></div>
                 <label class="mb-3 block text-xs font-semibold text-slate-300" for="session-invite-code">Codice d’invito</label>
                 <input id="session-invite-code" maxlength="8" required autocomplete="off" placeholder="A1B2C3D4" class="session-input font-mono uppercase tracking-[.2em]">
-                <button id="join-session-submit" type="submit" class="session-secondary mt-3">Unisciti come Player</button>
+                <label class="mb-2 mt-4 block text-xs font-semibold text-slate-300" for="session-join-role">Modalità di accesso</label>
+                <select id="session-join-role" class="session-input">
+                    <option value="player">Player · posso usare i miei avventurieri</option>
+                    <option value="viewer">Solo visualizzazione · posso solo guardare</option>
+                </select>
+                <button id="join-session-submit" type="submit" class="session-secondary mt-3">Unisciti alla sessione</button>
             </form>
         </section>
 
@@ -46,11 +51,11 @@
                 <div class="session-empty">Carico le tue sessioni…</div>
             </div>
         </section>
-        <p class="mt-8 text-center text-[11px] leading-5 text-slate-600">Le sessioni che crei sono accessibili solo a te e ai giocatori che aggiungi con il codice d’invito.</p>
+        <p class="mt-8 text-center text-[11px] leading-5 text-slate-600">Le sessioni che crei sono accessibili solo a te e alle persone che inviti con il codice.</p>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js?v=mapfit1"></script>
-    <script src="./sessions.js?v=sessions-1"></script>
+    <script src="./sessions.js?v=viewer-1"></script>
 </body>
 </html>
