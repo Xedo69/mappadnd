@@ -30,7 +30,7 @@
     }
 
     function openSession(session, role) {
-        const params = new URLSearchParams({ entry: 'account', role, session: session.id, v: 'sessions-1' });
+        const params = new URLSearchParams({ entry: 'account', role, session: session.id, v: 'sessions-2' });
         const target = role === 'player' ? './player.html' : './master.html';
         window.location.assign(`${target}?${params.toString()}`);
     }

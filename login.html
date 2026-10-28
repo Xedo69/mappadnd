@@ -108,7 +108,7 @@
             } catch (error) {
                 // The URL carries the entry mode when local-file storage is unavailable.
             }
-            const params = new URLSearchParams({ entry: mode, role, v: '20261017-3' });
+            const params = new URLSearchParams({ entry: mode, role, v: '20261017-4' });
             const target = role === 'master' ? './master.html' : './player.html';
             window.location.replace(`${target}?${params.toString()}`);
         }

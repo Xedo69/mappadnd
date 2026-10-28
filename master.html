@@ -849,6 +849,7 @@
                         let code = '';
                         try { code = (await error.context?.clone?.().json())?.error || ''; } catch (ignored) {}
                         if (code === 'assistant_not_configured') throw new Error('AI_NOT_CONFIGURED');
+                        if (code === 'assistant_busy') throw new Error('AI_BUSY');
                         throw new Error('AI_UNAVAILABLE');
                     }
                     if (typeof data?.answer !== 'string' || !data.answer.trim()) throw new Error('AI_UNAVAILABLE');
@@ -861,10 +862,15 @@
                 } catch (error) {
                     pending.remove();
                     const configured = error.message === 'AI_NOT_CONFIGURED';
+                    const busy = error.message === 'AI_BUSY';
                     addMessage(configured
                         ? 'L’assistente non è ancora configurato. Il Master deve aggiungere la chiave API Gemini ai segreti del progetto Supabase.'
-                        : 'Non riesco a ottenere una risposta in questo momento. Riprova tra poco.', 'assistant');
-                    statusNode.textContent = configured ? 'Configurazione AI necessaria su Supabase.' : 'Connessione all’assistente non riuscita.';
+                        : busy
+                            ? 'Gemini è momentaneamente sovraccarico. Attendi qualche secondo e riprova.'
+                            : 'Non riesco a ottenere una risposta in questo momento. Riprova tra poco.', 'assistant');
+                    statusNode.textContent = configured
+                        ? 'Configurazione AI necessaria su Supabase.'
+                        : busy ? 'Servizio Gemini temporaneamente occupato.' : 'Connessione all’assistente non riuscita.';
                     console.error('Richiesta all’assistente D&D non riuscita:', error);
                 } finally {
                     questionInput.disabled = false;

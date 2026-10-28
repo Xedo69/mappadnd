@@ -101,21 +101,39 @@ Deno.serve(async (request: Request) => {
       'Non hai accesso alla mappa, alla sessione, ai personaggi o alle informazioni segrete della campagna. Non affermare di averle viste.',
     ].join(' ')
 
-    const model = Deno.env.get('GEMINI_MODEL') || 'gemini-3.8-flash'
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-      method: 'POST',
-      headers: { 'x-goog-api-key': geminiApiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system_instruction: { parts: [{ text: instructions }] },
-        contents,
-        generationConfig: { maxOutputTokens: 500, temperature: 0.4 },
-      }),
-      signal: AbortSignal.timeout(30_000),
-    })
+    const configuredModel = Deno.env.get('GEMINI_MODEL')
+    const model = configuredModel || 'gemini-3.8-flash'
+    const requestModel = (targetModel: string) => fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(targetModel)}:generateContent`,
+      {
+        method: 'POST',
+        headers: { 'x-goog-api-key': geminiApiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: instructions }] },
+          contents,
+          generationConfig: { maxOutputTokens: 500, temperature: 0.4 },
+        }),
+        signal: AbortSignal.timeout(20_000),
+      },
+    )
+    const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+    let response: Response | null = null
+    for (let attempt = 0; attempt < 3; attempt++) {
+      response = await requestModel(model)
+      if (response.ok || ![429, 500, 503, 504].includes(response.status) || attempt === 2) break
+      await wait(800 * (2 ** attempt) + Math.floor(Math.random() * 250))
+    }
 
-    if (!response.ok) {
-      console.error('Gemini API returned status:', response.status)
-      return jsonResponse({ error: 'assistant_unavailable' }, 502, origin)
+    // If the default model is temporarily overloaded, try the previous stable Flash model once.
+    if (response?.status === 503 && !configuredModel) {
+      console.warn('Gemini primary model is temporarily unavailable; trying fallback model')
+      response = await requestModel('gemini-3.6-flash')
+    }
+
+    if (!response?.ok) {
+      const temporarilyUnavailable = response?.status === 429 || response?.status === 503 || response?.status === 504
+      console.error('Gemini API returned status:', response?.status || 'network_error')
+      return jsonResponse({ error: temporarilyUnavailable ? 'assistant_busy' : 'assistant_unavailable' }, temporarilyUnavailable ? 503 : 502, origin)
     }
     const answer = extractAnswer(await response.json())
     if (!answer) return jsonResponse({ error: 'empty_answer' }, 502, origin)
