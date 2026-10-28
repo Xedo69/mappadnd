@@ -205,6 +205,7 @@
 
         openSettings() {
             const modal = this.querySelector('[data-role="settings-modal"]');
+            document.body.classList.add('music-settings-open');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             this.querySelector('[data-action="close-settings"]').focus();
@@ -214,6 +215,7 @@
             const modal = this.querySelector('[data-role="settings-modal"]');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+            document.body.classList.remove('music-settings-open');
             this.querySelector('[data-action="open-settings"]').focus();
         }
 

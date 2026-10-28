@@ -14,8 +14,8 @@
         })();
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=viewer-1">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css?v=theme-5">
 </head>
 <body class="master-page auth-checking flex h-screen w-screen bg-slate-950 font-sans">
     <div id="auth-loading" role="status" aria-live="polite">Verifico l’accesso…</div>
@@ -200,6 +200,9 @@
         <button id="btn-open-dice" type="button" aria-label="Apri il lanciadadi" aria-controls="dice-dialog" aria-expanded="false" title="Tira i dadi">
             <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3 42 14v20L24 45 6 34V14L24 3Z"/><path d="M24 3v18m18-7-18 7-18-7m18 7v24M6 34l18-13 18 13M15 9l9 12 9-12M15 39l9-18 9 18"/><path d="m24 14 3 5-3 5-3-5 3-5Z" class="d20-mark"/></svg>
         </button>
+        <button id="btn-open-ai" type="button" class="ai-assistant-fab" aria-label="Apri l’assistente D&D" aria-controls="ai-assistant-backdrop" aria-expanded="false" title="Chiedi all’assistente D&D">
+            <span aria-hidden="true">✦</span><span>AI</span>
+        </button>
         <div id="map-wrapper" class="absolute origin-top-left flex items-center justify-center min-w-full min-h-full">
             <div id="map-container" class="grid-pattern relative border border-slate-700"></div>
         </div>
@@ -228,7 +231,10 @@
                     <p class="text-[10px] font-bold uppercase tracking-[.2em] text-indigo-300">Lancia i dadi</p>
                     <h2 id="dice-dialog-title" class="mt-1 text-xl font-extrabold text-white">🎲 Tiri di dado</h2>
                 </div>
-                <button id="btn-close-dice" type="button" class="dice-dialog-close" aria-label="Chiudi il lanciadadi">×</button>
+                <div class="flex items-center gap-2">
+                    <button id="dice-history-toggle" type="button" class="dice-history-toggle" aria-expanded="false" aria-controls="dice-history">Cronologia <span id="dice-history-count">0</span></button>
+                    <button id="btn-close-dice" type="button" class="dice-dialog-close" aria-label="Chiudi il lanciadadi">×</button>
+                </div>
             </header>
             <div class="dice-dialog-content">
                 <div class="mb-4 grid grid-cols-[minmax(0,1fr)_5rem] gap-3">
@@ -250,7 +256,34 @@
                     <button id="dice-roll-public" type="button" class="min-h-12 rounded-xl border border-indigo-400/40 bg-indigo-600 px-2 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-950/30 transition hover:bg-indigo-500 active:scale-[.98] disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none">📣 Per tutti</button>
                 </div>
                 <p id="dice-public-status" class="mt-3 text-xs leading-5 text-slate-400" role="status" aria-live="polite">Il tiro per tutti è disponibile quando il cloud è online.</p>
+                <section id="dice-history" class="dice-history hidden" aria-label="Cronologia dei tiri">
+                    <h3>Cronologia dei tiri</h3>
+                    <ol id="dice-history-list" aria-live="polite"></ol>
+                </section>
             </div>
+        </section>
+    </div>
+
+    <div id="ai-assistant-backdrop" class="ai-assistant-backdrop hidden" aria-hidden="true">
+        <section id="ai-assistant-dialog" class="ai-assistant-dialog" role="dialog" aria-modal="true" aria-labelledby="ai-assistant-title">
+            <header class="ai-assistant-header">
+                <div class="min-w-0">
+                    <p class="text-[10px] font-bold uppercase tracking-[.2em] text-violet-300">Regole e gioco</p>
+                    <h2 id="ai-assistant-title" class="mt-1 text-lg font-extrabold text-white">Assistente D&amp;D</h2>
+                </div>
+                <button id="btn-close-ai" type="button" class="ai-assistant-close" aria-label="Chiudi l’assistente">×</button>
+            </header>
+            <p class="ai-assistant-notice">Chiedi chiarimenti sulle regole. L’edizione può cambiare la risposta: per i casi dubbi decide il Master. La chat resta temporanea e le domande vengono inviate al servizio AI.</p>
+            <div id="ai-assistant-messages" class="ai-assistant-messages" role="log" aria-live="polite" aria-relevant="additions text">
+                <div class="ai-chat-message ai-chat-assistant">Ciao! Posso aiutarti con le regole e le meccaniche di D&amp;D. Se una risposta dipende dall’edizione, te lo segnalerò.</div>
+            </div>
+            <form id="ai-assistant-form" class="ai-assistant-form">
+                <label class="sr-only" for="ai-assistant-question">La tua domanda</label>
+                <textarea id="ai-assistant-question" rows="2" maxlength="500" placeholder="Scrivi una domanda sulle regole…" required></textarea>
+                <button id="ai-assistant-send" type="submit" aria-label="Invia domanda" title="Invia domanda"><span aria-hidden="true">➤</span></button>
+            </form>
+            <p id="ai-assistant-status" class="ai-assistant-status" role="status" aria-live="polite">Risposte generate dall’AI e da verificare con il Master.</p>
+            <div id="ai-assistant-resize" class="ai-assistant-resize-grip" role="separator" aria-orientation="horizontal" aria-label="Ridimensiona finestra chat" tabindex="0" title="Trascina l’angolo per ridimensionare"></div>
         </section>
     </div>
 
@@ -301,6 +334,26 @@
         const diceSenderId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
         const pageParams = new URLSearchParams(window.location.search);
         const activeGameSessionId = pageParams.get('session');
+        const diceHistoryStorageKey = `mappadnd-dice-history:${activeGameSessionId || 'local'}`;
+        const diceHistory = [];
+        try {
+            const savedDiceHistory = JSON.parse(localStorage.getItem(diceHistoryStorageKey) || '[]');
+            if (Array.isArray(savedDiceHistory)) savedDiceHistory.forEach(entry => {
+                if (!entry || typeof entry.id !== 'string' || ![4, 6, 8, 10, 12, 20, 100].includes(entry.sides)) return;
+                if (!Number.isInteger(entry.count) || entry.count < 1 || entry.count > 10 || !Array.isArray(entry.results) || entry.results.length !== entry.count) return;
+                if (!entry.results.every(value => Number.isInteger(value) && value >= 1 && value <= entry.sides)) return;
+                diceHistory.push({
+                    id: entry.id,
+                    actor: ['Master', 'Player'].includes(entry.actor) ? entry.actor : 'Player',
+                    sides: entry.sides,
+                    count: entry.count,
+                    results: entry.results,
+                    total: entry.results.reduce((sum, value) => sum + value, 0),
+                    personal: Boolean(entry.personal),
+                    timestamp: Number.isFinite(Date.parse(entry.timestamp)) ? new Date(entry.timestamp).toISOString() : new Date().toISOString()
+                });
+            });
+        } catch (error) {}
         let storedRole = null;
         try { storedRole = sessionStorage.getItem('dnd-map-role'); } catch (error) {}
         const requestedRole = pageParams.get('role');
@@ -399,6 +452,7 @@
             centerMap();
             if (state.map.autoFitImage && isImageUrl(state.map.bg)) fitMapToImage(state.map.bg);
             initializeDiceRoller();
+            initializeDndAssistant();
             await initializeCloudSync(entryMode === 'demo');
         }
 
@@ -546,11 +600,96 @@
             return (value[0] % sides) + 1;
         }
 
+        function renderDiceHistory() {
+            const list = document.getElementById('dice-history-list');
+            const count = document.getElementById('dice-history-count');
+            if (!list || !count) return;
+            count.textContent = String(diceHistory.length);
+            list.replaceChildren();
+            if (!diceHistory.length) {
+                const empty = document.createElement('li');
+                empty.className = 'dice-history-empty';
+                empty.textContent = 'I tiri compariranno qui.';
+                list.appendChild(empty);
+                return;
+            }
+            [...diceHistory].reverse().forEach(entry => {
+                const item = document.createElement('li');
+                item.className = 'dice-history-entry';
+                const heading = document.createElement('div');
+                heading.className = 'dice-history-entry-heading';
+                const actor = document.createElement('strong');
+                actor.textContent = `${entry.actor}${entry.personal ? ' · personale' : ' · al tavolo'}`;
+                const time = document.createElement('time');
+                time.dateTime = entry.timestamp;
+                time.textContent = new Intl.DateTimeFormat('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date(entry.timestamp));
+                heading.append(actor, time);
+                const result = document.createElement('p');
+                const values = entry.results.join(' + ');
+                result.textContent = `${entry.count}d${entry.sides}: ${entry.count === 1 ? values : `${values} = ${entry.total}`}`;
+                item.append(heading, result);
+                list.appendChild(item);
+            });
+        }
+
+        function recordDiceRoll(roll, personal = false) {
+            if (!roll || !roll.id || diceHistory.some(entry => entry.id === roll.id)) return;
+            const entry = {
+                id: String(roll.id),
+                actor: ['Master', 'Player'].includes(roll.actor) ? roll.actor : (playerMode ? 'Player' : 'Master'),
+                sides: roll.sides,
+                count: roll.count,
+                results: [...roll.results],
+                total: roll.results.reduce((sum, value) => sum + value, 0),
+                personal: Boolean(personal),
+                timestamp: Number.isFinite(Date.parse(roll.timestamp)) ? new Date(roll.timestamp).toISOString() : new Date().toISOString()
+            };
+            diceHistory.push(entry);
+            try { localStorage.setItem(diceHistoryStorageKey, JSON.stringify(diceHistory)); } catch (error) {}
+            renderDiceHistory();
+        }
+
+        function registerDiceHistorySync(channel) {
+            channel.on('broadcast', { event: 'dice_history_request' }, ({ payload }) => {
+                if (!payload?.requesterId || payload.requesterId === diceSenderId) return;
+                const publicRolls = diceHistory.filter(entry => !entry.personal);
+                const batches = [];
+                for (let index = 0; index < publicRolls.length; index += 100) batches.push(publicRolls.slice(index, index + 100));
+                Promise.all(batches.map(rolls => channel.send({
+                    type: 'broadcast',
+                    event: 'dice_history_response',
+                    payload: { targetSenderId: payload.requesterId, rolls }
+                }))).catch(error => console.warn('Condivisione della cronologia dadi non riuscita:', error));
+            });
+            channel.on('broadcast', { event: 'dice_history_response' }, ({ payload }) => {
+                if (payload?.targetSenderId !== diceSenderId || !Array.isArray(payload.rolls)) return;
+                payload.rolls.forEach(roll => {
+                    if (!roll || !DICE_SIDES.has(roll.sides) || !Number.isInteger(roll.count) || roll.count < 1 || roll.count > 10) return;
+                    if (!Array.isArray(roll.results) || roll.results.length !== roll.count || !roll.results.every(value => Number.isInteger(value) && value >= 1 && value <= roll.sides)) return;
+                    recordDiceRoll(roll, false);
+                });
+            });
+        }
+
+        function requestDiceHistorySync(channel) {
+            channel.send({ type: 'broadcast', event: 'dice_history_request', payload: { requesterId: diceSenderId } })
+                .catch(error => console.warn('Richiesta della cronologia dadi non riuscita:', error));
+        }
+
         function initializeDiceRoller() {
             const openButton = document.getElementById('btn-open-dice');
             const closeButton = document.getElementById('btn-close-dice');
             const backdrop = document.getElementById('dice-dialog-backdrop');
             const sidesSelect = document.getElementById('dice-sides');
+            const historyToggle = document.getElementById('dice-history-toggle');
+            const historyPanel = document.getElementById('dice-history');
+            historyToggle.addEventListener('click', () => {
+                const expanded = historyToggle.getAttribute('aria-expanded') !== 'true';
+                historyToggle.setAttribute('aria-expanded', String(expanded));
+                historyToggle.firstChild.textContent = expanded ? 'Nascondi ' : 'Cronologia ';
+                historyPanel.classList.toggle('hidden', !expanded);
+            });
+            renderDiceHistory();
             const closeDialog = () => closeDiceDialog();
             openButton.addEventListener('click', () => {
                 backdrop.classList.remove('hidden');
@@ -568,6 +707,171 @@
             document.getElementById('dice-roll-personal').addEventListener('click', () => performDiceRoll(false));
             document.getElementById('dice-roll-public').addEventListener('click', () => performDiceRoll(true));
             setDiceBroadcastReady(false);
+        }
+
+        function initializeDndAssistant() {
+            const backdrop = document.getElementById('ai-assistant-backdrop');
+            const openButton = document.getElementById('btn-open-ai');
+            const closeButton = document.getElementById('btn-close-ai');
+            const form = document.getElementById('ai-assistant-form');
+            const questionInput = document.getElementById('ai-assistant-question');
+            const sendButton = document.getElementById('ai-assistant-send');
+            const messagesNode = document.getElementById('ai-assistant-messages');
+            const statusNode = document.getElementById('ai-assistant-status');
+            const dialog = document.getElementById('ai-assistant-dialog');
+            const titleBar = dialog.querySelector('.ai-assistant-header');
+            const resizeHandle = document.getElementById('ai-assistant-resize');
+            const conversation = [];
+
+            const clampSize = (width, height) => ({
+                width: Math.max(Math.min(280, window.innerWidth - 24), Math.min(width, Math.min(800, window.innerWidth - 24))),
+                height: Math.max(Math.min(300, window.innerHeight - 24), Math.min(height, Math.min(900, window.innerHeight - 24)))
+            });
+            const setDialogSize = (width, height) => {
+                const size = clampSize(width, height);
+                backdrop.style.setProperty('--ai-chat-width', `${size.width}px`);
+                backdrop.style.setProperty('--ai-chat-height', `${size.height}px`);
+                if (dialog.style.left) {
+                    const left = Math.max(8, Math.min(window.innerWidth - size.width - 8, Number.parseFloat(dialog.style.left) || 8));
+                    const top = Math.max(8, Math.min(window.innerHeight - size.height - 8, Number.parseFloat(dialog.style.top) || 8));
+                    dialog.style.left = `${left}px`;
+                    dialog.style.top = `${top}px`;
+                }
+            };
+            let resizeStart = null;
+            resizeHandle.addEventListener('pointerdown', event => {
+                event.preventDefault();
+                const rect = backdrop.querySelector('.ai-assistant-dialog').getBoundingClientRect();
+                resizeStart = { x: event.clientX, y: event.clientY, width: rect.width, height: rect.height };
+                resizeHandle.setPointerCapture(event.pointerId);
+            });
+            resizeHandle.addEventListener('pointermove', event => {
+                if (!resizeStart) return;
+                setDialogSize(resizeStart.width + event.clientX - resizeStart.x, resizeStart.height + resizeStart.y - event.clientY);
+            });
+            const stopResize = () => { resizeStart = null; };
+            resizeHandle.addEventListener('pointerup', stopResize);
+            resizeHandle.addEventListener('pointercancel', stopResize);
+            resizeHandle.addEventListener('keydown', event => {
+                if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+                event.preventDefault();
+                const rect = backdrop.querySelector('.ai-assistant-dialog').getBoundingClientRect();
+                const step = event.shiftKey ? 64 : 24;
+                setDialogSize(rect.width + (event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0), rect.height + (event.key === 'ArrowUp' ? step : event.key === 'ArrowDown' ? -step : 0));
+            });
+            let dragStart = null;
+            titleBar.addEventListener('pointerdown', event => {
+                if (event.target.closest('button') || event.button !== 0) return;
+                const rect = dialog.getBoundingClientRect();
+                dragStart = { x: event.clientX, y: event.clientY, left: rect.left, top: rect.top };
+                titleBar.setPointerCapture(event.pointerId);
+                dialog.classList.add('is-moving');
+            });
+            titleBar.addEventListener('pointermove', event => {
+                if (!dragStart) return;
+                const rect = dialog.getBoundingClientRect();
+                const left = Math.max(8, Math.min(window.innerWidth - rect.width - 8, dragStart.left + event.clientX - dragStart.x));
+                const top = Math.max(8, Math.min(window.innerHeight - rect.height - 8, dragStart.top + event.clientY - dragStart.y));
+                dialog.style.left = `${left}px`;
+                dialog.style.top = `${top}px`;
+                dialog.style.right = 'auto';
+                dialog.style.bottom = 'auto';
+            });
+            const stopDragging = () => { dragStart = null; dialog.classList.remove('is-moving'); };
+            titleBar.addEventListener('pointerup', stopDragging);
+            titleBar.addEventListener('pointercancel', stopDragging);
+            window.addEventListener('resize', () => {
+                if (backdrop.style.getPropertyValue('--ai-chat-width')) {
+                    const rect = backdrop.querySelector('.ai-assistant-dialog').getBoundingClientRect();
+                    setDialogSize(rect.width, rect.height);
+                }
+            });
+
+            const addMessage = (text, role, extraClass = '') => {
+                const message = document.createElement('div');
+                message.className = `ai-chat-message ${role === 'user' ? 'ai-chat-user' : 'ai-chat-assistant'} ${extraClass}`.trim();
+                message.textContent = text;
+                messagesNode.appendChild(message);
+                messagesNode.scrollTop = messagesNode.scrollHeight;
+                return message;
+            };
+
+            const close = () => {
+                backdrop.classList.add('hidden');
+                backdrop.setAttribute('aria-hidden', 'true');
+                openButton.setAttribute('aria-expanded', 'false');
+                openButton.focus();
+            };
+
+            openButton.addEventListener('click', () => {
+                backdrop.classList.remove('hidden');
+                backdrop.setAttribute('aria-hidden', 'false');
+                openButton.setAttribute('aria-expanded', 'true');
+                questionInput.focus();
+            });
+            closeButton.addEventListener('click', close);
+            backdrop.addEventListener('click', event => {
+                if (event.target === backdrop) close();
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !backdrop.classList.contains('hidden')) close();
+            });
+            questionInput.addEventListener('keydown', event => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    form.requestSubmit();
+                }
+            });
+            form.addEventListener('submit', async event => {
+                event.preventDefault();
+                const question = questionInput.value.trim();
+                if (!question || question.length > 500 || sendButton.disabled) return;
+                if (!activeGameSessionId || !cloudClient) {
+                    statusNode.textContent = 'L’assistente è disponibile nelle sessioni cloud come Master o Player.';
+                    return;
+                }
+                if (!cloudUser) {
+                    statusNode.textContent = 'Connessione al cloud in corso. Riprova tra un momento.';
+                    return;
+                }
+
+                addMessage(question, 'user');
+                questionInput.value = '';
+                questionInput.disabled = true;
+                sendButton.disabled = true;
+                statusNode.textContent = 'L’assistente sta preparando la risposta…';
+                const pending = addMessage('Sto consultando le regole…', 'assistant', 'ai-chat-pending');
+                try {
+                    const { data, error } = await cloudClient.functions.invoke('dnd-rules-assistant', {
+                        body: { sessionId: activeGameSessionId, question, history: conversation.slice(-8) }
+                    });
+                    if (error) {
+                        let code = '';
+                        try { code = (await error.context?.clone?.().json())?.error || ''; } catch (ignored) {}
+                        if (code === 'assistant_not_configured') throw new Error('AI_NOT_CONFIGURED');
+                        throw new Error('AI_UNAVAILABLE');
+                    }
+                    if (typeof data?.answer !== 'string' || !data.answer.trim()) throw new Error('AI_UNAVAILABLE');
+                    pending.remove();
+                    addMessage(data.answer, 'assistant');
+                    conversation.push({ role: 'user', content: question }, { role: 'assistant', content: data.answer });
+                    statusNode.textContent = playerMode
+                        ? 'Risposta pronta. Per i casi dubbi, confrontati con il Master.'
+                        : 'Risposta pronta. Applica le regole concordate per il tuo tavolo.';
+                } catch (error) {
+                    pending.remove();
+                    const configured = error.message === 'AI_NOT_CONFIGURED';
+                    addMessage(configured
+                        ? 'L’assistente non è ancora configurato. Il Master deve aggiungere la chiave API Gemini ai segreti del progetto Supabase.'
+                        : 'Non riesco a ottenere una risposta in questo momento. Riprova tra poco.', 'assistant');
+                    statusNode.textContent = configured ? 'Configurazione AI necessaria su Supabase.' : 'Connessione all’assistente non riuscita.';
+                    console.error('Richiesta all’assistente D&D non riuscita:', error);
+                } finally {
+                    questionInput.disabled = false;
+                    sendButton.disabled = false;
+                    questionInput.focus();
+                }
+            });
         }
 
         function closeDiceDialog() {
@@ -593,7 +897,8 @@
                 actor: playerMode ? 'Player' : 'Master',
                 sides,
                 count,
-                results: Array.from({ length: count }, () => randomDieRoll(sides))
+                results: Array.from({ length: count }, () => randomDieRoll(sides)),
+                timestamp: new Date().toISOString()
             };
             roll.total = roll.results.reduce((sum, result) => sum + result, 0);
 
@@ -612,6 +917,7 @@
         }
 
         function showDiceRoll(roll, personal = false) {
+            recordDiceRoll(roll, personal);
             const notation = `${roll.count}d${roll.sides}`;
             const results = roll.results.join(' + ');
             const resultText = roll.count === 1 ? String(roll.total) : `${results} = ${roll.total}`;
@@ -726,6 +1032,7 @@
                 if (cloudChannel) await cloudClient.removeChannel(cloudChannel);
                 cloudChannel = cloudClient.channel(`session:${activeGameSessionId}`, { config: { private: true } });
                 if (!viewerMode) cloudChannel.on('broadcast', { event: 'dice_roll' }, ({ payload }) => handleIncomingDiceRoll(payload));
+                registerDiceHistorySync(cloudChannel);
                 cloudChannel.on('broadcast', { event: 'session_state_updated' }, async () => {
                         const { data: incoming, error } = await cloudClient.rpc('get_game_session_state', {
                             p_session_id: activeGameSessionId
@@ -745,6 +1052,7 @@
                         const connected = status === 'SUBSCRIBED';
                         setDiceBroadcastReady(connected);
                         setCloudConnectionStatus(connected);
+                        if (connected) requestDiceHistorySync(cloudChannel);
                     });
                 return;
             }
@@ -788,11 +1096,13 @@
                     lastCloudStateJson = incomingJson;
                     applyCloudState(incoming, { preserveView: true });
                     setCloudStatus('Aggiornamento ricevuto da un altro dispositivo.');
-                })
-                .subscribe(status => {
+                });
+            registerDiceHistorySync(cloudChannel);
+            cloudChannel.subscribe(status => {
                     const connected = status === 'SUBSCRIBED';
                     setDiceBroadcastReady(connected);
                     setCloudConnectionStatus(connected);
+                    if (connected) requestDiceHistorySync(cloudChannel);
                 });
         }
 

@@ -8,8 +8,8 @@
     <link rel="icon" type="image/jpeg" href="https://i.pinimg.com/736x/0a/ee/a0/0aeea062d5a14faf9921e96d3658ff60.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css?v=theme-5">
     <title>Mappa Tattica D&amp;D</title>
 </head>
 <body class="home-page">
@@ -19,31 +19,138 @@
                 <img src="https://i.pinimg.com/736x/0a/ee/a0/0aeea062d5a14faf9921e96d3658ff60.jpg" alt="">
                 <span>MAPPA TATTICA</span>
             </a>
-            <a class="header-link" href="./credits.html">Credits</a>
+            <nav class="home-nav" aria-label="Navigazione principale">
+                <a href="#come-funziona">Come funziona</a>
+                <a class="header-link" href="./credits.html">Credits</a>
+            </nav>
         </header>
         <main>
             <section class="copy" aria-labelledby="welcome-title">
-                <div class="eyebrow">La tua prossima avventura</div>
-                <h1 id="welcome-title">Prepara il tavolo.<span>Vivi la storia.</span></h1>
-                <p class="intro">Crea la mappa, muovi le pedine e guida il tuo gruppo attraverso ogni incontro. La tua avventura comincia qui.</p>
+                <h1 id="welcome-title">Mappa pronta.<span>Si parte.</span></h1>
+                <p class="intro">Prepara gli incontri di Dungeons &amp; Dragons, invita il party e giocate sulla stessa mappa.</p>
                 <div class="actions">
                     <a class="play" href="./login.html?v=20261017-3">
-                        <span>Gioca</span>
+                        <span>Apri la mappa</span>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                     </a>
-                    <span class="hint">Accedi o entra in demo per iniziare.</span>
+                    <span class="hint">Crea una sessione o entra con un invito.</span>
                 </div>
             </section>
-            <div class="art" aria-hidden="true">
-                <div class="glow"></div>
-                <div class="map-card">
-                    <div class="map-grid"></div><div class="map-river"></div>
-                    <span class="pin one">⚔</span><span class="pin two">✦</span><span class="pin three">⌖</span>
-                    <span class="map-label">La mappa ti aspetta</span>
+            <div class="art">
+                <div class="map-stage">
+                    <div class="map-demo" data-ui aria-label="Anteprima interattiva della mappa">
+                        <div class="map-demo-toolbar">
+                            <div><span class="map-demo-title">Passo del Corvo</span><span class="map-demo-subtitle">Incontro · Bosco antico</span></div>
+                            <span class="map-live"><i></i>Pronta al tavolo</span>
+                        </div>
+                        <div class="map-playfield" role="grid" aria-label="Griglia tattica: seleziona una pedina, poi una casella per spostarla">
+                            <div class="map-terrain terrain-one" aria-hidden="true"></div><div class="map-terrain terrain-two" aria-hidden="true"></div>
+                            <div class="map-grid-lines" aria-hidden="true"></div>
+                            <button class="map-piece piece-ranger" type="button" data-piece="Esploratrice" style="--col:3;--row:3" aria-label="Sposta Esploratrice, casella 3, 3">E</button>
+                            <button class="map-piece piece-wizard" type="button" data-piece="Mago" style="--col:6;--row:5" aria-label="Sposta Mago, casella 6, 5">M</button>
+                            <button class="map-piece piece-goblin" type="button" data-piece="Goblin" style="--col:9;--row:3" aria-label="Sposta Goblin, casella 9, 3">G</button>
+                            <span class="map-distance" aria-hidden="true">30 ft</span>
+                        </div>
+                        <div class="map-demo-controls">
+                            <span id="map-hint" aria-live="polite">Scegli una pedina, poi tocca una casella.</span>
+                            <button id="map-reset" type="button">Ripristina</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
-        <footer>Un tavolo, una mappa, infinite avventure.</footer>
+        <section class="how-section" id="come-funziona" aria-labelledby="how-title">
+            <div class="section-heading"><h2 id="how-title" data-reveal>Un tavolo solo, anche a distanza.</h2><p data-reveal>La sessione si prepara in pochi passaggi. Poi ognuno vede la stessa scena.</p></div>
+            <div class="feature-list">
+                <article class="feature-row">
+                    <div class="feature-fragment terrain-fragment" data-ui data-reveal aria-hidden="true"><div class="mini-terrain"></div><div class="mini-grid"></div><span class="mini-marker marker-forest">E</span><span class="mini-marker marker-river">M</span><span class="mini-marker marker-road">G</span></div>
+                    <div class="feature-copy"><h3 data-reveal>Disegna il campo di battaglia.</h3><p data-reveal>Carica una mappa, regola la griglia e posiziona le pedine dove comincia l’incontro.</p></div>
+                </article>
+                <article class="feature-row">
+                    <div class="feature-fragment invite-fragment" data-ui data-reveal aria-hidden="true"><span class="invite-title">Le rovine di Valdombra</span><span class="invite-role role-master">Master</span><span class="invite-role role-player">Giocatore</span><span class="invite-role role-viewer">Osservatore</span><span class="invite-code">Codice d’invito</span></div>
+                    <div class="feature-copy"><h3 data-reveal>Invita il gruppo.</h3><p data-reveal>Crea una sessione e condividi il codice. Master, giocatori e osservatori accedono con il proprio ruolo.</p></div>
+                </article>
+                <article class="feature-row">
+                    <div class="feature-fragment tools-fragment" data-ui data-reveal aria-hidden="true"><span class="tool-token">◈</span><span class="tool-label">Pedine</span><span class="tool-die">D20</span><span class="tool-label">Tira i dadi</span><span class="tool-note">Regole e gioco · Assistente</span></div>
+                    <div class="feature-copy"><h3 data-reveal>Tieni il ritmo della partita.</h3><p data-reveal>Muovi le pedine, tira i dadi e consulta l’assistente alle regole senza lasciare la mappa.</p></div>
+                </article>
+            </div>
+            <a class="section-cta" data-reveal href="./login.html?v=20261017-3">Inizia una sessione <span aria-hidden="true">↗</span></a>
+        </section>
+        <footer><a class="footer-brand" data-reveal href="./index.html">Mappa Tattica</a><span data-reveal>Le vostre storie, sullo stesso tavolo.</span><a data-reveal href="./credits.html">Credits</a></footer>
     </div>
+    <script>
+        (() => {
+            const field = document.querySelector('.map-playfield');
+            const hint = document.getElementById('map-hint');
+            const gridLines = field.querySelector('.map-grid-lines');
+            for (let cell = 0; cell < 60; cell++) gridLines.append(document.createElement('i'));
+            let selected = null;
+            field.addEventListener('click', (event) => {
+                const piece = event.target.closest('[data-piece]');
+                if (piece) {
+                    selected?.classList.remove('is-selected');
+                    selected = piece;
+                    selected.classList.add('is-selected');
+                    hint.textContent = piece.dataset.piece + ' selezionato: scegli la destinazione.';
+                    return;
+                }
+                if (!selected) { hint.textContent = 'Prima scegli una pedina.'; return; }
+                const rect = field.getBoundingClientRect();
+                const col = Math.min(10, Math.max(1, Math.floor((event.clientX - rect.left) / rect.width * 10) + 1));
+                const row = Math.min(6, Math.max(1, Math.floor((event.clientY - rect.top) / rect.height * 6) + 1));
+                selected.style.setProperty('--col', col);
+                selected.style.setProperty('--row', row);
+                selected.setAttribute('aria-label', 'Sposta ' + selected.dataset.piece + ', casella ' + col + ', ' + row);
+                hint.textContent = selected.dataset.piece + ' spostato: casella ' + col + ', ' + row + '.';
+                selected.classList.remove('is-selected');
+                selected = null;
+            });
+            field.addEventListener('keydown', (event) => {
+                if (!selected) return;
+                const offsets = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
+                if (offsets[event.key]) {
+                    event.preventDefault();
+                    const col = Math.min(10, Math.max(1, Number(selected.style.getPropertyValue('--col')) + offsets[event.key][0]));
+                    const row = Math.min(6, Math.max(1, Number(selected.style.getPropertyValue('--row')) + offsets[event.key][1]));
+                    selected.style.setProperty('--col', col);
+                    selected.style.setProperty('--row', row);
+                    selected.setAttribute('aria-label', 'Sposta ' + selected.dataset.piece + ', casella ' + col + ', ' + row);
+                    hint.textContent = selected.dataset.piece + ' spostato: casella ' + col + ', ' + row + '. Premi Invio per confermare.';
+                } else if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    selected.classList.remove('is-selected');
+                    selected = null;
+                    hint.textContent = 'Posizione confermata.';
+                }
+            });
+            document.getElementById('map-reset').addEventListener('click', () => {
+                [[3,3],[6,5],[9,3]].forEach(([col,row], index) => {
+                    const piece = field.querySelectorAll('[data-piece]')[index];
+                    piece.style.setProperty('--col', col);
+                    piece.style.setProperty('--row', row);
+                    piece.classList.remove('is-selected');
+                });
+                selected = null;
+                hint.textContent = 'Scegli una pedina, poi tocca una casella.';
+            });
+            const revealTargets = document.querySelectorAll('[data-reveal]');
+            if ('IntersectionObserver' in window) {
+                document.body.classList.add('home-motion-ready');
+                const revealObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-visible');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: .12 });
+                revealTargets.forEach((element, index) => {
+                    element.style.setProperty('--reveal-delay', (index % 3) * 70 + 'ms');
+                    revealObserver.observe(element);
+                });
+            }
+        })();
+    </script>
 </body>
 </html>
