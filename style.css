@@ -1837,3 +1837,105 @@ body.credits-page {
     #btn-open-menu:hover { border-color: #c29b5b !important; background: #252721 !important; }
     #btn-open-menu:focus-visible { outline: 2px solid #e0c48a; outline-offset: 2px; }
 }
+
+/* Phone layout corrections: constrain the game shell and let every page reflow cleanly. */
+@media (max-width: 760px) {
+    html, body { max-width: 100%; overflow-x: clip; }
+
+    body.master-page {
+        position: relative;
+        width: 100%;
+        height: 100vh !important;
+        height: 100dvh !important;
+        min-height: 0 !important;
+        overflow: hidden;
+    }
+    .master-page #map-sidebar {
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 40 !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        flex: none !important;
+        margin: 0 !important;
+        transform: translateX(0);
+    }
+    body.master-page.sidebar-collapsed #map-sidebar {
+        transform: translateX(-102%);
+        pointer-events: none;
+    }
+    .master-page #map-sidebar-header {
+        flex: none;
+        min-height: calc(3.75rem + env(safe-area-inset-top)) !important;
+        padding-top: max(.75rem, env(safe-area-inset-top)) !important;
+        padding-left: max(.8rem, env(safe-area-inset-left)) !important;
+        padding-right: max(.8rem, env(safe-area-inset-right)) !important;
+    }
+    .master-page #map-sidebar-header h1 { min-width: 0; font-size: .9rem !important; }
+    .master-page #map-controls {
+        min-height: 0;
+        padding-bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+    .master-page #map-viewport { position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; height: 100dvh !important; min-height: 0 !important; }
+    .master-page #map-wrapper { min-width: 100%; min-height: 100%; }
+    .master-page #btn-open-menu {
+        top: max(.75rem, env(safe-area-inset-top)) !important;
+        left: max(.75rem, env(safe-area-inset-left)) !important;
+        z-index: 30 !important;
+    }
+    .master-page #btn-open-ai, .master-page #btn-open-dice {
+        z-index: 25;
+        max-width: calc(100vw - 1.5rem);
+        min-height: 2.75rem;
+    }
+    .master-page .ai-assistant-backdrop { padding: max(.75rem, env(safe-area-inset-top)) max(.75rem, env(safe-area-inset-right)) max(.75rem, env(safe-area-inset-bottom)) max(.75rem, env(safe-area-inset-left)) !important; }
+    .master-page .ai-assistant-dialog {
+        left: max(.75rem, env(safe-area-inset-left)) !important;
+        right: max(.75rem, env(safe-area-inset-right)) !important;
+        bottom: max(.75rem, env(safe-area-inset-bottom)) !important;
+        width: min(var(--ai-chat-width, calc(100vw - 24px)), calc(100vw - 24px)) !important;
+        max-width: calc(100vw - 24px) !important;
+        height: min(var(--ai-chat-height, 78dvh), 78dvh, 42rem) !important;
+        max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.5rem) !important;
+        min-width: 0 !important;
+        min-height: min(280px, calc(100dvh - 1.5rem)) !important;
+        margin: 0 !important;
+    }
+    .master-page .dice-dialog-backdrop { padding: 0 !important; }
+    .master-page .dice-dialog { width: 100% !important; max-width: 100% !important; padding-bottom: env(safe-area-inset-bottom); }
+    .master-page #youtube-music [data-role="settings-modal"] [role="dialog"] { width: 100% !important; max-width: 100vw !important; }
+
+    .login-page { min-height: 100vh; min-height: 100svh; padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left)); }
+    .login-page main { min-width: 0; }
+    .login-page main > section { min-width: 0; padding: 1rem !important; }
+    .login-page #role-picker > div:last-child { grid-template-columns: 1fr !important; }
+    .login-page input { min-width: 0; font-size: 16px; }
+
+    .sessions-page main { width: min(100%, 38rem); padding-right: max(1rem, env(safe-area-inset-right)); padding-left: max(1rem, env(safe-area-inset-left)); }
+    .sessions-page main > header { flex-wrap: wrap; }
+    .sessions-page main > header > div:last-child { width: 100%; display: flex; gap: .5rem; }
+    .sessions-page main > header > div:last-child button { flex: 1; min-width: 0; }
+    .sessions-page #sessions-list { grid-template-columns: minmax(0, 1fr) !important; }
+    .sessions-page .session-card, .sessions-page .session-list-card { min-width: 0; }
+    .sessions-page .session-list-card code { overflow-wrap: anywhere; }
+
+    .credits-page header { gap: .75rem; padding: max(.8rem, env(safe-area-inset-top)) 1rem .8rem; }
+    .credits-page .brand { min-width: 0; font-size: .68rem; }
+    .credits-page .back { flex: none; padding: .55rem .7rem; font-size: .75rem; }
+    .credits-page main { padding: 3rem 1rem max(2rem, env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 380px) {
+    .home-page header { gap: .5rem; padding-right: .85rem; padding-left: .85rem; }
+    .home-page .brand { font-size: .7rem; letter-spacing: .04em; }
+    .home-page .home-nav { gap: .45rem; }
+    .home-page .header-link { padding-right: .55rem; padding-left: .55rem; }
+    .master-page #map-sidebar-header h1 { font-size: .82rem !important; }
+    .credits-page .brand { letter-spacing: .06em; }
+}
